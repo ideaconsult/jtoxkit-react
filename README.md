@@ -3,8 +3,8 @@
 An embeddable **React** viewer for eNanoMapper/AMBIT **substance**, **composition** and
 **study** data. It is a modern rewrite of the study/substance viewers from the legacy
 jQuery [jToxKit](https://github.com/ideaconsult/jToxKit) (`StudyKit`, `SubstanceKit`,
-`CompositionKit`), packaged like [`@adma/qubounds-viewer`](../qubounds-viewer) so it can be
-embedded in React apps (e.g. `spectrasearch-viewers`) or run standalone.
+`CompositionKit`), packaged like [`@ideaconsult/qubounds-viewer`](https://github.com/ideaconsult/qubounds-viewer) so it can be
+embedded in React apps (e.g. [`spectrasearch`](https://github.com/h2020charisma/spectrasearch) or run standalone.
 
 The legacy jToxKit remains in use by static (Eleventy/jQuery) sites; this package targets
 React hosts and does **not** replace it there.
