@@ -1,0 +1,47 @@
+{
+  "name": "@ideaconsult/jtoxkit-react",
+  "version": "0.1.0",
+  "description": "Embeddable React viewer for eNanoMapper/AMBIT substance, composition and study data. React rewrite of the jToxKit Study/Substance kits.",
+  "private": true,
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/jtoxkit-react.js",
+  "module": "./dist/jtoxkit-react.js",
+  "exports": {
+    ".": {
+      "import": "./dist/jtoxkit-react.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:lib": "vite build --config vite.lib.config.js",
+    "preview": "vite preview",
+    "prepublishOnly": "npm run build:lib",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "dompurify": "^3.1.7"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@vitejs/plugin-react": "^4.3.1",
+    "jsdom": "^28.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^5.3.4",
+    "vitest": "^4.1.9"
+  }
+}

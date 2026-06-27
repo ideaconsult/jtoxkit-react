@@ -1,0 +1,206 @@
+/* Base styles for the embeddable jToxKit viewer.
+   Everything is scoped under .jtoxkit-root so importing this package never leaks
+   globals (resets, element styles, CSS variables) into a host app. Tokens mirror
+   qubounds-viewer for visual consistency across the spectrasearch/qubounds family. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+.jtoxkit-root {
+  /* Light palette: warm white base, slate surfaces, teal accent */
+  --c-bg:          #f5f6f8;
+  --c-surface:     #ffffff;
+  --c-surface-2:   #f0f2f5;
+  --c-border:      #dde1e9;
+  --c-border-soft: #eaecf0;
+
+  --c-text:        #1a1d26;
+  --c-text-muted:  #5a6076;
+  --c-text-dim:    #9ba3bb;
+
+  /* Accent: teal */
+  --c-accent:      #0d9488;
+  --c-accent-dim:  rgba(13,148,136,0.10);
+
+  --c-amber:       #d97706;
+  --c-red:         #dc2626;
+  --c-blue:        #2563eb;
+
+  --radius:   6px;
+  --radius-lg: 10px;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow:    0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+
+  height: 100%;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.jtoxkit-root *,
+.jtoxkit-root *::before,
+.jtoxkit-root *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.jtoxkit-root a { color: var(--c-accent); text-decoration: none; }
+.jtoxkit-root a:hover { text-decoration: underline; }
+
+.jtoxkit-root button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+.jtoxkit-root input,
+.jtoxkit-root select {
+  font-family: var(--font-body);
+  font-size: 14px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  color: var(--c-text);
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.jtoxkit-root input:focus,
+.jtoxkit-root select:focus {
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px var(--c-accent-dim);
+}
+
+.jtoxkit-root ::-webkit-scrollbar { width: 8px; height: 8px; }
+.jtoxkit-root ::-webkit-scrollbar-track { background: var(--c-bg); }
+.jtoxkit-root ::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 4px; }
+.jtoxkit-root ::-webkit-scrollbar-thumb:hover { background: var(--c-text-dim); }
+
+/* units span emitted by renderRange / valueAndUnits */
+.jtoxkit-root .units { color: var(--c-text-muted); font-size: 0.92em; }
+
+/* external-identifier links emitted by formatExtIdentifiers */
+.jtoxkit-root a.qxternal { word-break: break-all; }
+
+.jtoxkit-root .tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+  background: var(--c-accent-dim);
+  color: var(--c-accent);
+}
+
+/* Generic data table look shared by Study / Composition tables */
+.jtoxkit-root table.jtox-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.jtoxkit-root table.jtox-table th,
+.jtoxkit-root table.jtox-table td {
+  border: 1px solid var(--c-border-soft);
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+.jtoxkit-root table.jtox-table th {
+  background: var(--c-surface-2);
+  font-weight: 600;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+}
+.jtoxkit-root table.jtox-table tbody tr:nth-child(even) { background: rgba(0,0,0,0.015); }
+
+/* Multi-effect cell: each effect on its own sub-row, aligned across columns */
+.jtoxkit-root .jtox-multi { display: flex; flex-direction: column; gap: 2px; }
+.jtoxkit-root .jtox-multi > .jtox-multi-row {
+  padding: 2px 0;
+  border-bottom: 1px dashed var(--c-border-soft);
+}
+.jtoxkit-root .jtox-multi > .jtox-multi-row:last-child { border-bottom: none; }
+
+/* ---- layout ---- */
+.jtoxkit-root .jtox-viewer { padding: 16px; display: flex; flex-direction: column; gap: 18px; height: 100%; overflow: auto; }
+.jtoxkit-root .jtox-header {
+  display: flex; align-items: baseline; gap: 12px;
+  padding-bottom: 10px; border-bottom: 1px solid var(--c-border);
+}
+.jtoxkit-root .jtox-header-title { font-size: 18px; font-weight: 600; }
+.jtoxkit-root .jtox-header-sub { font-size: 12px; color: var(--c-text-dim); font-family: var(--font-mono); }
+
+/* ---- status messages ---- */
+.jtoxkit-root .jtox-loading,
+.jtoxkit-root .jtox-empty { color: var(--c-text-muted); }
+.jtoxkit-root .jtox-error { color: var(--c-red); }
+.jtoxkit-root .jtox-loading-block,
+.jtoxkit-root .jtox-error-block { padding: 24px; }
+.jtoxkit-root .jtox-empty { padding: 8px 0; }
+
+/* ---- substance card ---- */
+.jtoxkit-root .jtox-card {
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-sm);
+}
+.jtoxkit-root .jtox-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.jtoxkit-root .jtox-card-title { font-size: 18px; font-weight: 600; }
+.jtoxkit-root .jtox-card-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 24px;
+}
+.jtoxkit-root .jtox-field dt { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--c-text-dim); margin-bottom: 2px; }
+.jtoxkit-root .jtox-field dd { font-size: 14px; word-break: break-word; }
+.jtoxkit-root .jtox-mono { font-family: var(--font-mono); font-size: 12px; color: var(--c-text-muted); }
+
+/* ---- sections (composition / studies) ---- */
+.jtoxkit-root .jtox-section { display: flex; flex-direction: column; gap: 10px; }
+.jtoxkit-root .jtox-section-title { font-size: 15px; font-weight: 600; color: var(--c-text); }
+
+/* ---- tabs ---- */
+.jtoxkit-root .jtox-tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--c-border); }
+.jtoxkit-root .jtox-tab {
+  padding: 7px 14px; font-size: 13px; font-weight: 500; color: var(--c-text-muted);
+  border-bottom: 2px solid transparent; border-radius: var(--radius) var(--radius) 0 0;
+}
+.jtoxkit-root .jtox-tab:hover { background: var(--c-surface-2); color: var(--c-text); }
+.jtoxkit-root .jtox-tab.active { color: var(--c-accent); border-bottom-color: var(--c-accent); }
+.jtoxkit-root .jtox-count {
+  display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 9px;
+  background: var(--c-surface-2); color: var(--c-text-muted); font-size: 11px; font-family: var(--font-mono);
+}
+.jtoxkit-root .jtox-tab.active .jtox-count { background: var(--c-accent-dim); color: var(--c-accent); }
+
+/* ---- tab toolbar ---- */
+.jtoxkit-root .jtox-tab-toolbar { display: flex; align-items: center; gap: 12px; margin: 4px 0; }
+.jtoxkit-root .jtox-filter { flex: 0 1 280px; }
+.jtoxkit-root .jtox-link-btn { color: var(--c-accent); font-size: 13px; padding: 4px 0; }
+.jtoxkit-root .jtox-link-btn:hover { text-decoration: underline; }
+
+/* ---- foldable category ---- */
+.jtoxkit-root .jtox-foldable { border: 1px solid var(--c-border); border-radius: var(--radius); overflow: hidden; }
+.jtoxkit-root .jtox-foldable-head {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  padding: 8px 12px; background: var(--c-surface-2); font-weight: 600; font-size: 13px;
+}
+.jtoxkit-root .jtox-foldable-head:hover { background: var(--c-border-soft); }
+.jtoxkit-root .jtox-foldable-caret { color: var(--c-text-dim); width: 12px; }
+.jtoxkit-root .jtox-foldable-body { padding: 0; overflow-x: auto; }
+
+/* ---- tables ---- */
+.jtoxkit-root .jtox-table-wrap { overflow-x: auto; }
+.jtoxkit-root td.center, .jtoxkit-root th.center { text-align: center; }
+.jtoxkit-root td.left, .jtoxkit-root th.left { text-align: left; }
+.jtoxkit-root td.middle { vertical-align: middle; }
+.jtoxkit-root .camelCase { text-transform: capitalize; }
+.jtoxkit-root .jtox-uuid { font-family: var(--font-mono); font-size: 11px; cursor: help; }
+.jtoxkit-root .jtox-structure { max-width: 96px; max-height: 96px; }
+.jtoxkit-root .jtox-compound-link { margin-right: 4px; }
+
+/* ---- composition ---- */
+.jtoxkit-root .jtox-composition { display: flex; flex-direction: column; gap: 6px; }
+.jtoxkit-root .jtox-composition-banner { display: flex; gap: 16px; font-size: 13px; color: var(--c-text-muted); }
+.jtoxkit-root .jtox-composition-name { font-weight: 600; color: var(--c-text); }

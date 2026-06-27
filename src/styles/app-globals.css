@@ -1,0 +1,4 @@
+/* Globals for the STANDALONE dev app only (not shipped in the library build).
+   The library scopes everything under .jtoxkit-root instead. */
+html, body, #root { height: 100%; margin: 0; }
+body { background: #f5f6f8; }
