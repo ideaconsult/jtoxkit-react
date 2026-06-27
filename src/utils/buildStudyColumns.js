@@ -4,6 +4,11 @@ import { renderMulti, modifyColDef, sortColDefs } from './tables.js'
 // Faithful port of StudyKit.ensureTable + StudyKit.defaultColumns: builds the column
 // set for one category from a representative study (defaults + dynamic parameters /
 // conditions / interpretation columns), then applies the per-category config overrides.
+//
+// Effect-based columns (Endpoint/Result/Text/conditions) carry a `renderEffect(effect)`
+// in addition to the whole-array `render`, so StudyTable can lay each effect out on its
+// own table row (rowSpan on the per-study columns) — the aligned grid the legacy produced
+// with nested tables + equalizeHeights.
 
 const ERROR_DEFAULT = 'Err' // StudyKit.defaults.errorDefault
 
@@ -14,37 +19,38 @@ function shorten(uuid) {
   return '<span title="' + s + '" class="jtox-uuid">' + short + '</span>'
 }
 
+// Per-effect renderers (one effect → HTML string).
+const endpointEffect = (d) => {
+  let t = d?.endpoint ?? ''
+  if (d?.endpointtype != null) t += ' (' + d.endpointtype + ')'
+  return t
+}
+const resultEffect = (d) => {
+  let r = renderRange(d?.result, null, 'display')
+  if (d?.result?.errorValue != null) {
+    r += ' (' + (d.result.errQualifier || ERROR_DEFAULT) + ' ' + d.result.errorValue + ')'
+  }
+  return r
+}
+const textEffect = (d) => d?.result?.textValue || '-'
+
+// An effect-based column: renderEffect for the per-row layout + render (renderMulti) for
+// filtering and any non-rowspan fallback.
+function effectColumn(title, className, width, renderEffect) {
+  return {
+    title, className, width, data: 'effects', perEffect: true, renderEffect,
+    render: (effects, type) => renderMulti(effects, (e) => renderEffect(e, type))
+  }
+}
+
 // StudyKit.defaultColumns (indices referenced by putDefaults below).
 const defaultColumns = [
   // 0 — main
   { title: 'Name', className: 'center middle', width: '15%', data: 'protocol.endpoint' },
-  // 1 — effects: Endpoint
-  {
-    title: 'Endpoint', className: 'center middle jtox-multi', width: '10%', data: 'effects',
-    render: (data) =>
-      renderMulti(data, (d) => {
-        let t = d?.endpoint ?? ''
-        if (d?.endpointtype != null) t += ' (' + d.endpointtype + ')'
-        return t
-      })
-  },
-  // 2 — effects: Result
-  {
-    title: 'Result', className: 'center middle jtox-multi', width: '10%', data: 'effects',
-    render: (data, type) =>
-      renderMulti(data, (d) => {
-        let r = renderRange(d?.result, null, type)
-        if (d?.result?.errorValue != null) {
-          r += ' (' + (d.result.errQualifier || ERROR_DEFAULT) + ' ' + d.result.errorValue + ')'
-        }
-        return r
-      })
-  },
-  // 3 — effects: Text
-  {
-    title: 'Text', className: 'center middle jtox-multi', width: '10%', data: 'effects',
-    render: (data) => renderMulti(data, (d) => d?.result?.textValue || '-')
-  },
+  // 1,2,3 — effects
+  effectColumn('Endpoint', 'center middle jtox-multi', '10%', endpointEffect),
+  effectColumn('Result', 'center middle jtox-multi', '10%', resultEffect),
+  effectColumn('Text', 'center middle jtox-multi', '10%', textEffect),
   // 4 — protocol: Guideline
   { title: 'Guideline', className: 'center middle', width: '15%', data: 'protocol.guideline', render: '[,]', defaultContent: '-' },
   // 5 — protocol: Owner
@@ -123,7 +129,7 @@ export function buildStudyColumns(study, category, columns) {
   const firstEffect = (study.effects && study.effects[0]) || {}
   const conditions = firstEffect.conditions || {}
 
-  // parameters (skip those that are really conditions; render scalar/range with units)
+  // parameters (per-study scalars; skip those that are really conditions)
   putAGroup(study.parameters || {}, (p) => {
     if (conditions[p] !== undefined || conditions[p + ' unit'] !== undefined) return undefined
     let col = { title: p, className: 'center middle', data: 'parameters.' + p, defaultContent: '-' }
@@ -133,21 +139,24 @@ export function buildStudyColumns(study, category, columns) {
     return col
   })
 
-  // conditions (per-effect, stacked)
+  // conditions (per-effect)
   putAGroup(conditions, (c) => {
     let col = { title: c, className: 'center middle jtox-multi', data: 'effects' }
     col = modifyColDef(columns, col, category, 'conditions')
     if (col == null) return null
-    col.render = (data, type) => renderMulti(data, (d) => renderRange(d?.conditions?.[c], d?.conditions?.[c + ' unit'], type))
+    const renderEffect = (d) => renderRange(d?.conditions?.[c], d?.conditions?.[c + ' unit'], 'display')
+    col.perEffect = true
+    col.renderEffect = renderEffect
+    col.render = (data) => renderMulti(data, renderEffect)
     return col
   })
 
   // 1,2,3 — effects defaults
   putDefaults(1, 3, 'effects')
 
-  // interpretation
+  // interpretation (per-study scalar)
   putAGroup(study.interpretation || {}, (i) => {
-    const col = { title: i, className: 'center middle jtox-multi', data: 'interpretation.' + i, defaultContent: '-' }
+    const col = { title: i, className: 'center middle', data: 'interpretation.' + i, defaultContent: '-' }
     return modifyColDef(columns, col, category, 'interpretation')
   })
 
