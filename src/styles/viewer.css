@@ -35,7 +35,7 @@
   background: var(--c-bg);
   color: var(--c-text);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -58,7 +58,7 @@
 .jtoxkit-root input,
 .jtoxkit-root select {
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 15px;
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: var(--radius);
@@ -100,14 +100,15 @@
 .jtoxkit-root table.jtox-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 14px;
 }
 .jtoxkit-root table.jtox-table th,
 .jtoxkit-root table.jtox-table td {
   border: 1px solid var(--c-border-soft);
-  padding: 6px 8px;
+  padding: 8px 11px;
   text-align: left;
   vertical-align: top;
+  line-height: 1.45;
 }
 .jtoxkit-root table.jtox-table th {
   background: var(--c-surface-2);
@@ -117,13 +118,17 @@
 }
 .jtoxkit-root table.jtox-table tbody tr:nth-child(even) { background: rgba(0,0,0,0.015); }
 
-/* Multi-effect cell: each effect on its own sub-row, aligned across columns */
-.jtoxkit-root .jtox-multi { display: flex; flex-direction: column; gap: 2px; }
-.jtoxkit-root .jtox-multi > .jtox-multi-row {
+/* Per-effect columns: each effect is its own table row (rowSpan on per-study columns),
+   so this is just a marker on the cell — must NOT be display:flex or it breaks the table
+   column layout. The div.jtox-multi wrapper styling only applies to the renderMulti
+   fallback (not used in normal row rendering). */
+.jtoxkit-root td.jtox-multi { text-align: center; }
+.jtoxkit-root div.jtox-multi { display: flex; flex-direction: column; gap: 2px; }
+.jtoxkit-root div.jtox-multi > .jtox-multi-row {
   padding: 2px 0;
   border-bottom: 1px dashed var(--c-border-soft);
 }
-.jtoxkit-root .jtox-multi > .jtox-multi-row:last-child { border-bottom: none; }
+.jtoxkit-root div.jtox-multi > .jtox-multi-row:last-child { border-bottom: none; }
 
 /* ---- layout ---- */
 .jtoxkit-root .jtox-viewer { padding: 16px; display: flex; flex-direction: column; gap: 18px; height: 100%; overflow: auto; }
@@ -153,7 +158,7 @@
   display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 24px;
 }
 .jtoxkit-root .jtox-field dt { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--c-text-dim); margin-bottom: 2px; }
-.jtoxkit-root .jtox-field dd { font-size: 14px; word-break: break-word; }
+.jtoxkit-root .jtox-field dd { font-size: 15px; word-break: break-word; }
 .jtoxkit-root .jtox-mono { font-family: var(--font-mono); font-size: 12px; color: var(--c-text-muted); }
 
 /* ---- sections (composition / studies) ---- */
@@ -194,7 +199,8 @@
 .jtoxkit-root .jtox-table-wrap { overflow-x: auto; }
 .jtoxkit-root td.center, .jtoxkit-root th.center { text-align: center; }
 .jtoxkit-root td.left, .jtoxkit-root th.left { text-align: left; }
-.jtoxkit-root td.middle { vertical-align: middle; }
+/* vertical alignment intentionally left at the cell default (top) so tall per-study
+   cells (e.g. the Protocol list) align to the top, matching the legacy layout. */
 .jtoxkit-root .camelCase { text-transform: capitalize; }
 .jtoxkit-root .jtox-uuid { font-family: var(--font-mono); font-size: 11px; cursor: help; }
 .jtoxkit-root .jtox-structure { max-width: 96px; max-height: 96px; }
