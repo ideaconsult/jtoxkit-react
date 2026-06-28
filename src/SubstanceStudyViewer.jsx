@@ -3,9 +3,9 @@ import { ViewerConfigProvider, useViewerConfig } from './context/ViewerConfig.js
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import { DataSourceProvider } from './context/DataSource.jsx'
 import { useSubstance, useStudySummary } from './hooks/useAmbit.js'
-import SubstanceCard from './components/SubstanceCard.jsx'
-import CompositionView from './components/CompositionView.jsx'
+import SubstancePanel from './components/SubstancePanel.jsx'
 import StudyViewer from './components/StudyViewer.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 import './styles/viewer.css'
 
 // Drives the AMBIT load sequence (StudyKit.querySubstance): substance → studysummary,
@@ -41,8 +41,12 @@ function ViewerBody({ substanceUri, substanceId, initialTab, showHeader }) {
           <span className="jtox-header-sub">{apiBase}</span>
         </header>
       )}
-      <SubstanceCard substance={substance} />
-      {substanceURI && <CompositionView compositionUri={substanceURI + '/composition'} />}
+      <ErrorBoundary label="SubstancePanel">
+        <SubstancePanel
+          substance={substance}
+          compositionUri={substanceURI ? substanceURI + '/composition' : null}
+        />
+      </ErrorBoundary>
       {summary?.length ? <StudyViewer summary={summary} initialTab={initialTab} /> : null}
     </div>
   )

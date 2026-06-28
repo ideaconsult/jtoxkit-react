@@ -32,7 +32,8 @@ function groupComposition(list) {
   return Object.values(groups)
 }
 
-export default function CompositionView({ compositionUri }) {
+// compact=true: used inside SubstancePanel — omits the section wrapper (panel provides it)
+export default function CompositionView({ compositionUri, compact = false }) {
   const { apiBase, showDiagrams } = useViewerConfig()
   const { load, data, loading, error } = useComposition()
 
@@ -68,45 +69,49 @@ export default function CompositionView({ compositionUri }) {
   }, [apiBase, showDiagrams])
 
   if (!compositionUri) return null
-  if (loading) return <div className="jtox-section"><div className="jtox-loading">Loading composition…</div></div>
-  if (error) return <div className="jtox-section"><div className="jtox-error">Composition error: {error}</div></div>
+  if (loading) return <div className={compact ? '' : 'jtox-section'}><div className="jtox-loading">Loading composition…</div></div>
+  if (error) return <div className={compact ? '' : 'jtox-section'}><div className="jtox-error">Composition error: {error}</div></div>
   if (!groups.length) return null
+
+  const body = groups.map((g) => (
+    <div key={g.uuid} className="jtox-composition">
+      {(g.name || g.purity) && (
+        <div className="jtox-composition-banner">
+          {g.name && <Html className="jtox-composition-name" html={g.name} />}
+          {g.purity && (
+            <span className="jtox-composition-purity">Purity: <Html html={g.purity} /></span>
+          )}
+        </div>
+      )}
+      <div className="jtox-table-wrap">
+        <table className="jtox-table">
+          <thead>
+            <tr>
+              {columns.map((c, i) => (
+                <th key={i} className={c.className}>{c.title}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {g.composition.map((cmp, ri) => (
+              <tr key={ri}>
+                {columns.map((c, ci) => (
+                  <DataCell key={ci} colDef={c} row={cmp} />
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  ))
+
+  if (compact) return <div className="jtox-section">{body}</div>
 
   return (
     <div className="jtox-section">
       <h3 className="jtox-section-title">Composition</h3>
-      {groups.map((g) => (
-        <div key={g.uuid} className="jtox-composition">
-          {(g.name || g.purity) && (
-            <div className="jtox-composition-banner">
-              {g.name && <Html className="jtox-composition-name" html={g.name} />}
-              {g.purity && (
-                <span className="jtox-composition-purity">Purity: <Html html={g.purity} /></span>
-              )}
-            </div>
-          )}
-          <div className="jtox-table-wrap">
-            <table className="jtox-table">
-              <thead>
-                <tr>
-                  {columns.map((c, i) => (
-                    <th key={i} className={c.className} style={c.width ? { width: c.width } : undefined}>{c.title}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {g.composition.map((cmp, ri) => (
-                  <tr key={ri}>
-                    {columns.map((c, ci) => (
-                      <DataCell key={ci} colDef={c} row={cmp} />
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ))}
+      {body}
     </div>
   )
 }

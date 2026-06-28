@@ -8,8 +8,7 @@ substance kits, packaged like [`@adma/qubounds-viewer`](../qubounds-viewer). See
 
 ## Commands
 
-This is a **Node + Vite** project (the parent repo's "use uv" rule is Python-only and does
-not apply here).
+This is a **Node + Vite** project.
 
 ```bash
 npm run dev        # standalone dev server → http://localhost:5175/jtoxkit/?substanceUri=...
@@ -38,7 +37,7 @@ src/
 ## Core principle: this is a faithful port
 
 Behavior should match the legacy jToxKit. When unsure how something should render or which
-AMBIT field to read, consult the original source at **`d:\nina\src\git_idea\jToxKit`**
+AMBIT field to read, consult the original source at **[`jToxKit`](https://github.com/ideaconsult/jtoxkit)**
 (`kits/js/StudyKit.js`, `SubstanceKit.js`, `CompositionKit.js`, `widgets/`, `core/`).
 
 ## Conventions & gotchas (read before editing)

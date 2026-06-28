@@ -5,7 +5,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
 .jtoxkit-root {
-  /* Light palette: warm white base, slate surfaces, teal accent */
+  /* Light palette: warm white base, slate surfaces, teal accent
+     NOTE: font-size intentionally set at 16px for legibility in data-dense tables */
   --c-bg:          #f5f6f8;
   --c-surface:     #ffffff;
   --c-surface-2:   #f0f2f5;
@@ -35,7 +36,7 @@
   background: var(--c-bg);
   color: var(--c-text);
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -96,19 +97,22 @@
   color: var(--c-accent);
 }
 
-/* Generic data table look shared by Study / Composition tables */
+/* Generic data table look shared by Study / Composition tables.
+   table-layout:auto lets browser size columns by content (no cramping on the left).
+   width:100% fills the wrapper; overflow-x:auto on .jtox-table-wrap handles overflow. */
 .jtoxkit-root table.jtox-table {
   width: 100%;
+  table-layout: auto;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 15px;
 }
 .jtoxkit-root table.jtox-table th,
 .jtoxkit-root table.jtox-table td {
   border: 1px solid var(--c-border-soft);
-  padding: 8px 11px;
+  padding: 8px 12px;
   text-align: left;
   vertical-align: top;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 .jtoxkit-root table.jtox-table th {
   background: var(--c-surface-2);
@@ -116,7 +120,7 @@
   color: var(--c-text-muted);
   white-space: nowrap;
 }
-.jtoxkit-root table.jtox-table tbody tr:nth-child(even) { background: rgba(0,0,0,0.015); }
+.jtoxkit-root table.jtox-table tbody tr:nth-child(even) { background: rgba(0,0,0,0.018); }
 
 /* Per-effect columns: each effect is its own table row (rowSpan on per-study columns),
    so this is just a marker on the cell — must NOT be display:flex or it breaks the table
@@ -210,3 +214,22 @@
 .jtoxkit-root .jtox-composition { display: flex; flex-direction: column; gap: 6px; }
 .jtoxkit-root .jtox-composition-banner { display: flex; gap: 16px; font-size: 13px; color: var(--c-text-muted); }
 .jtoxkit-root .jtox-composition-name { font-weight: 600; color: var(--c-text); }
+
+/* ---- substance top panel ----
+   The panel container + summary are styled INLINE in SubstancePanel.jsx. See the GOTCHA
+   note there: styling the <summary> via a class with display:flex, or wrapping its
+   content in a block/flex child, triggers a Chromium <details> bug that hides the panel.
+   The inner composition uses CompositionView's compact mode (no standalone heading). */
+
+/* ---- pagination ---- */
+.jtoxkit-root .jtox-pagination {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 4px; font-size: 13px; color: var(--c-text-muted);
+}
+.jtoxkit-root .jtox-page-btn {
+  padding: 3px 12px; border: 1px solid var(--c-border); border-radius: var(--radius);
+  font-size: 13px; color: var(--c-text); background: var(--c-surface);
+}
+.jtoxkit-root .jtox-page-btn:hover:not(:disabled) { background: var(--c-surface-2); }
+.jtoxkit-root .jtox-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.jtoxkit-root .jtox-page-info { min-width: 120px; text-align: center; }
