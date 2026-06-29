@@ -5,3 +5,6 @@
 export { default, default as SubstanceStudyViewer } from './SubstanceStudyViewer'
 export { useAuth } from './context/AuthContext'
 export { useViewerConfig } from './context/ViewerConfig'
+// jsambit: the pure-JS EffectArray model (dose-response parsing + export), reusable
+// outside the viewer for other aggregate visualizations.
+export * as jsambit from './jsambit/index.js'

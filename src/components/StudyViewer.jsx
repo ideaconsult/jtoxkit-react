@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useStudies } from '../hooks/useAmbit.js'
 import { useViewerConfig } from '../context/ViewerConfig.jsx'
 import { config_study } from '../config/studyColumns.js'
-import StudyTable from './StudyTable.jsx'
+import CategorySection from './CategorySection.jsx'
 
 const KNOWN = { 'P-CHEM': 'P-Chem', ENV_FATE: 'Env Fate', ECOTOX: 'Eco Tox', TOX: 'Tox' }
 
@@ -48,7 +48,7 @@ function FoldableCategory({ title, collapsed, onToggle, children }) {
   )
 }
 
-function StudyTab({ tab, cached, onLoaded }) {
+function StudyTab({ tab, cached, onLoaded, substance }) {
   const cfg = useViewerConfig()
   const columns = (cfg.columnConfig || config_study).columns
   const { load, data, loading, error } = useStudies()
@@ -101,14 +101,14 @@ function StudyTab({ tab, cached, onLoaded }) {
           collapsed={collapsed.has(g.code)}
           onToggle={() => toggleOne(g.code)}
         >
-          <StudyTable studies={g.studies} category={g.code} columns={columns} filter={filter} />
+          <CategorySection group={g} columns={columns} filter={filter} substance={substance} />
         </FoldableCategory>
       ))}
     </div>
   )
 }
 
-export default function StudyViewer({ summary, initialTab }) {
+export default function StudyViewer({ summary, initialTab, substance }) {
   const tabs = useMemo(() => buildTabs(summary), [summary])
   const [active, setActive] = useState(0)
   const [cache, setCache] = useState({})
@@ -148,7 +148,7 @@ export default function StudyViewer({ summary, initialTab }) {
           </button>
         ))}
       </div>
-      <StudyTab key={tab.key} tab={tab} cached={cache[tab.key]} onLoaded={onLoaded} />
+      <StudyTab key={tab.key} tab={tab} cached={cache[tab.key]} onLoaded={onLoaded} substance={substance} />
     </div>
   )
 }

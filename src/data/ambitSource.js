@@ -8,8 +8,9 @@ function authHeaders(token) {
   return h
 }
 
-export function createAmbitSource({ apiBase = '', token = null, credentials = 'include', rewrite = null } = {}) {
+export function createAmbitSource({ apiBase = '', convertBase = '', token = null, credentials = 'include', rewrite = null } = {}) {
   const base = (apiBase || '').replace(/\/$/, '')
+  const cvtBase = (convertBase || '').replace(/\/$/, '')
 
   // AMBIT URIs in responses are absolute; ids / relative paths resolve against apiBase.
   // `rewrite` (dev only) can route the final URL through a same-origin proxy to dodge CORS.
@@ -56,6 +57,26 @@ export function createAmbitSource({ apiBase = '', token = null, credentials = 'i
     // GET {substance.URI}/composition → { composition[], feature{} }
     async getComposition(uri, opts) {
       return getJson(uri, opts)
+    },
+
+    // Whether dose-response conversion is available (host supplied a ramanchada-api base).
+    canConvert: !!cvtBase,
+
+    // POST {convertBase}/dataset/convert?format=effectarray with an AMBIT Substances
+    // payload → pyambit EffectArray JSON ({ datasets:[{document_uuid, arrays:[...]}] }),
+    // converted in-memory and streamed back (no NeXus file). See jsambit for parsing.
+    async convertEffectArray(substancesPayload, { signal } = {}) {
+      if (!cvtBase) throw new Error('No convertBase configured for dose-response conversion')
+      const url = `${cvtBase}/dataset/convert?format=effectarray`
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
+        credentials,
+        body: JSON.stringify(substancesPayload),
+        signal
+      })
+      if (!res.ok) throw new Error(`convert HTTP ${res.status} for ${url}`)
+      return res.json()
     }
   }
 }

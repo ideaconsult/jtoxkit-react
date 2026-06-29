@@ -47,7 +47,7 @@ function ViewerBody({ substanceUri, substanceId, initialTab, showHeader }) {
           compositionUri={substanceURI ? substanceURI + '/composition' : null}
         />
       </ErrorBoundary>
-      {summary?.length ? <StudyViewer summary={summary} initialTab={initialTab} /> : null}
+      {summary?.length ? <StudyViewer summary={summary} initialTab={initialTab} substance={substance} /> : null}
     </div>
   )
 }
@@ -57,9 +57,9 @@ function ViewerBody({ substanceUri, substanceId, initialTab, showHeader }) {
 // override the build-time env defaults. `source` injects a custom data source (defaults
 // to the AMBIT REST adapter).
 export default function SubstanceStudyViewer({
-  token, apiBase, showDiagrams, columnConfig, source, ...body
+  token, apiBase, convertBase, showDiagrams, columnConfig, source, ...body
 }) {
-  const configValue = { apiBase, showDiagrams, columnConfig }
+  const configValue = { apiBase, convertBase, showDiagrams, columnConfig }
   return (
     <ViewerConfigProvider value={configValue}>
       <AuthProvider token={token ?? undefined}>

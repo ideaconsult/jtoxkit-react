@@ -10,7 +10,7 @@ const DataSourceContext = createContext(null)
 
 export function DataSourceProvider({ source, children }) {
   const { token } = useAuth()
-  const { apiBase, proxyFrom, proxyTo } = useViewerConfig()
+  const { apiBase, convertBase, proxyFrom, proxyTo } = useViewerConfig()
   const value = useMemo(() => {
     if (source) return source
     // Dev convenience: route absolute AMBIT URLs (including the ones AMBIT returns in its
@@ -19,8 +19,8 @@ export function DataSourceProvider({ source, children }) {
       proxyFrom && proxyTo
         ? (url) => (url.startsWith(proxyFrom) ? proxyTo + url.slice(proxyFrom.length) : url)
         : null
-    return createAmbitSource({ apiBase, token, rewrite })
-  }, [source, apiBase, token, proxyFrom, proxyTo])
+    return createAmbitSource({ apiBase, convertBase, token, rewrite })
+  }, [source, apiBase, convertBase, token, proxyFrom, proxyTo])
   return <DataSourceContext.Provider value={value}>{children}</DataSourceContext.Provider>
 }
 

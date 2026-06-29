@@ -233,3 +233,32 @@
 .jtoxkit-root .jtox-page-btn:hover:not(:disabled) { background: var(--c-surface-2); }
 .jtoxkit-root .jtox-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .jtoxkit-root .jtox-page-info { min-width: 120px; text-align: center; }
+
+/* ---- dose-response: Table | Chart toggle + chart ---- */
+.jtoxkit-root .jtox-view-toggle {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 2px 10px;
+}
+.jtoxkit-root .jtox-view-btn {
+  padding: 3px 12px; border: 1px solid var(--c-border); border-radius: var(--radius);
+  font-size: 13px; color: var(--c-text-muted); background: var(--c-surface); cursor: pointer;
+}
+.jtoxkit-root .jtox-view-btn:hover { background: var(--c-surface-2); }
+.jtoxkit-root .jtox-view-btn.active {
+  color: var(--c-text); background: var(--c-surface-2);
+  border-color: var(--c-border); font-weight: 600;
+}
+.jtoxkit-root .jtox-dr-export { margin-left: auto; }
+
+.jtoxkit-root .jtox-doseresponse { padding: 4px 2px 8px; }
+.jtoxkit-root .jtox-dr-toolbar {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 6px; font-size: 13px; color: var(--c-text-muted);
+}
+.jtoxkit-root .jtox-dr-select {
+  padding: 3px 8px; border: 1px solid var(--c-border); border-radius: var(--radius);
+  font-size: 13px; color: var(--c-text); background: var(--c-surface);
+}
+.jtoxkit-root .jtox-dr-logx { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.jtoxkit-root .jtox-dr-plot { width: 100%; overflow-x: auto; }
+.jtoxkit-root .jtox-dr-plot figure { margin: 0; }

@@ -9,6 +9,11 @@ const ENV = import.meta.env || {}
 
 const DEFAULTS = {
   apiBase: (ENV.VITE_AMBIT_URL ?? '').replace(/\/$/, ''),
+  // ramanchada-api base, used only for the dose-response conversion endpoint
+  // (POST {convertBase}/dataset/convert?format=effectarray). AMBIT substance/study reads
+  // still go direct to apiBase. The host passes this (spectrasearch: its VITE_BaseURL).
+  // Empty ⇒ the dose-response chart is simply not offered.
+  convertBase: '',
   showDiagrams: false,
   // null ⇒ StudyTable uses the bundled default study config (config_study)
   columnConfig: null,
@@ -27,7 +32,8 @@ export function ViewerConfigProvider({ value, children }) {
     return {
       ...DEFAULTS,
       ...clean,
-      apiBase: (clean.apiBase ?? DEFAULTS.apiBase).replace(/\/$/, '')
+      apiBase: (clean.apiBase ?? DEFAULTS.apiBase).replace(/\/$/, ''),
+      convertBase: (clean.convertBase ?? DEFAULTS.convertBase).replace(/\/$/, '')
     }
   }, [value])
 

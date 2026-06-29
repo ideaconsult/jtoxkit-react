@@ -3,8 +3,10 @@ import react from '@vitejs/plugin-react'
 import { fileURLToPath } from 'node:url'
 
 // Library build: emits an ESM bundle + a single style.css under dist/.
-// React is a peer (provided by the host); @tanstack/react-table and dompurify are
-// bundled so consumers only need React — same self-contained model as qubounds-viewer.
+// React is a peer (provided by the host); dompurify is bundled so consumers only need
+// React. @observablehq/plot is also kept external (an optional peer) so the embed reuses
+// the host's instance instead of duplicating ~hundreds of KB — spectrasearch already
+// depends on it. Hosts that want the dose-response chart install @observablehq/plot.
 export default defineConfig({
   plugins: [react()],
   build: {
@@ -15,7 +17,7 @@ export default defineConfig({
       fileName: () => 'jtoxkit-react.js'
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime'],
+      external: ['react', 'react-dom', 'react/jsx-runtime', '@observablehq/plot'],
       output: { assetFileNames: 'style.css' }
     },
     outDir: 'dist',
