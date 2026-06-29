@@ -16,7 +16,8 @@
     "./style.css": "./dist/style.css"
   },
   "sideEffects": [
-    "**/*.css"
+    "**/*.css",
+    "**/legacyGlobals.js"
   ],
   "scripts": {
     "dev": "vite",

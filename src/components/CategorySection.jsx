@@ -3,7 +3,7 @@ import { useEffectArrays } from '../hooks/useAmbit.js'
 import { useDataSource } from '../context/DataSource.jsx'
 import StudyTable from './StudyTable.jsx'
 import DoseResponseChart from './DoseResponseChart.jsx'
-import { ambitHasConcentration, parseConversion, toLongRows, toCsv } from '../jsambit/index.js'
+import { ambitHasConcentration, parseConversion, ambitStudiesToLongRows, toCsv } from '../jsambit/index.js'
 
 const AUTO_CHART_EFFECT_ROWS = 50 // above this, a dose-response category opens as a chart
 
@@ -56,9 +56,14 @@ export default function CategorySection({ group, columns, filter, substance }) {
 
   const parsed = useMemo(() => (data ? parseConversion(data) : null), [data])
 
+  // Export the FULL raw AMBIT studies (all protocol/parameters/provider/conditions/results),
+  // not the reduced dose-response arrays — so the CSV is self-contained and useful.
   const exportCsv = () => {
-    if (!parsed) return
-    download(`${group.code || 'studies'}_doseresponse.csv`, toCsv(toLongRows(parsed)), 'text/csv')
+    download(
+      `${group.code || 'studies'}.csv`,
+      toCsv(ambitStudiesToLongRows(group.studies)),
+      'text/csv'
+    )
   }
 
   return (
@@ -79,7 +84,7 @@ export default function CategorySection({ group, columns, filter, substance }) {
           >
             Dose–response
           </button>
-          {mode === 'chart' && parsed && (
+          {mode === 'chart' && (
             <button type="button" className="jtox-link-btn jtox-dr-export" onClick={exportCsv}>
               Export CSV
             </button>
@@ -93,7 +98,12 @@ export default function CategorySection({ group, columns, filter, substance }) {
         ) : error ? (
           <div className="jtox-error">Could not build chart: {error}</div>
         ) : (
-          <DoseResponseChart studies={parsed || []} />
+          <DoseResponseChart
+            studies={parsed || []}
+            rawStudies={group.studies}
+            columns={columns}
+            category={group.code}
+          />
         )
       ) : (
         <StudyTable studies={group.studies} category={group.code} columns={columns} filter={filter} />

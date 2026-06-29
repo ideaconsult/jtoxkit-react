@@ -32,6 +32,9 @@ can be dropped in later (via the `source` prop) without touching the components.
 
 ## Install / embed
 
+The package is consumed as a **built library** — hosts import `dist/jtoxkit-react.js`
+(+ `dist/style.css`), never `src/`. So the build step is mandatory:
+
 ```bash
 npm run build:lib   # emits dist/jtoxkit-react.js + dist/style.css
 ```
@@ -44,6 +47,7 @@ import '@ideaconsult/jtoxkit-react/style.css'
   substanceUri="https://apps.ideaconsult.net/nanoreg1/substance/XXXX-….."
   token={keycloakToken}            // optional; omit for public data
   apiBase="https://apps.ideaconsult.net/nanoreg1/"
+  convertBase="https://api.ramanchada.ideaconsult.net/"  // optional; enables dose-response
   showDiagrams
 />
 ```
@@ -53,8 +57,44 @@ sure React is deduped so hooks share one instance:
 
 ```js
 // vite.config.js
-resolve: { dedupe: ['react', 'react-dom'] }
+resolve: { dedupe: ['react', 'react-dom'] },
+optimizeDeps: { include: ['@ideaconsult/jtoxkit-react'] },
 ```
+
+**Peer dependencies:** `react`, `react-dom`, and — only for the dose-response chart —
+`@observablehq/plot` (kept external/optional so the host's single instance is reused; if
+the host doesn't provide it, the chart is simply not shown). `spectrasearch-viewers`
+already depends on it.
+
+## Deploying updates into a linked host (e.g. spectrasearch-viewers)
+
+The host references this package as a local `file:` dependency, which npm installs as a
+**symlink** (`node_modules/@ideaconsult/jtoxkit-react` → this repo). So `dist/` is shared
+live and **no reinstall is needed** after a code change — but two things still apply:
+
+1. **Rebuild the library** (src → dist). The host reads `dist`, not `src`:
+   ```bash
+   # in this repo
+   npm run build:lib              # or: npm run build:lib -- --watch  (rebuild on save)
+   ```
+2. **Bust Vite's dep cache in the host's dev server.** Because the package is in the host's
+   `optimizeDeps.include`, Vite pre-bundles it; a `dist` rebuild isn't picked up until you
+   force re-optimization:
+   ```bash
+   # in the host app
+   npm run dev -- --force         # or: rm -rf node_modules/.vite && npm run dev
+   ```
+   A production `npm run build` re-reads `dist` every time, so it needs no cache busting.
+
+Confirm the host is on your latest build (the two paths should be byte-identical):
+
+```bash
+ls -la dist/jtoxkit-react.js \
+       ../../charisma/spectrasearch-viewers/node_modules/@ideaconsult/jtoxkit-react/dist/jtoxkit-react.js
+```
+
+> If the host installed this package as a **copy** instead of a symlink (older npm, or
+> `--install-strategy`), re-copy it after each lib build with `npm install` in the host.
 
 ### Props
 

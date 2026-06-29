@@ -8,6 +8,7 @@ import {
   panelsForStudy,
   isDoseResponse,
   toLongRows,
+  ambitStudiesToLongRows,
   toCsv,
 } from '../jsambit/index.js'
 
@@ -145,5 +146,73 @@ describe('export', () => {
     const lines = csv.split('\n')
     expect(lines[0]).toContain('document_uuid')
     expect(lines).toHaveLength(7) // header + 6 rows
+  })
+})
+
+// Raw AMBIT study (full shape) → the self-contained export used by the chart's CSV button.
+const rawStudy = {
+  uuid: 'NNRG-doc-1',
+  investigation_uuid: 'INV-1',
+  assay_uuid: 'ASSAY-1',
+  protocol: {
+    topcategory: 'TOX',
+    category: { code: 'CELL_VIABILITY_ASSAY_SECTION', title: 'Cell viability' },
+    endpoint: 'Cell viability',
+    guideline: ['H2DCFDA-Probe'],
+  },
+  citation: { owner: 'INERIS', title: 'INERIS-ALI-NM101', year: '2016' },
+  reliability: { r_value: '1 (reliable)' },
+  parameters: { ASSAY: 'AlamarBlue', 'Cell type': 'A549' },
+  effects: [
+    {
+      endpoint: 'viability',
+      endpointtype: null,
+      result: { loValue: 98, unit: '%', errorValue: 2, errQualifier: 'SD' },
+      conditions: {
+        Treatment: 'sample',
+        'Exposure time': '3 h',
+        CONCENTRATION: { loValue: 10, unit: 'ug/mL' },
+      },
+    },
+  ],
+}
+
+describe('ambitStudiesToLongRows (full export)', () => {
+  it('keeps all provenance: protocol, provider, params, conditions, result', () => {
+    const rows = ambitStudiesToLongRows([rawStudy])
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({
+      document_uuid: 'NNRG-doc-1',
+      investigation_uuid: 'INV-1',
+      assay_uuid: 'ASSAY-1',
+      category: 'Cell viability',
+      protocol_endpoint: 'Cell viability',
+      guideline: 'H2DCFDA-Probe',
+      provider: 'INERIS',
+      reference: 'INERIS-ALI-NM101',
+      reference_year: '2016',
+      reliability: '1 (reliable)',
+      'param.ASSAY': 'AlamarBlue',
+      'param.Cell type': 'A549',
+      effect_endpoint: 'viability',
+      result_loValue: 98,
+      result_unit: '%',
+      error: 2,
+      error_qualifier: 'SD',
+      'cond.Treatment': 'sample', // real treatment value, not the classifier's "test"
+      'cond.Exposure time': '3 h',
+      'cond.CONCENTRATION': '10 ug/mL', // object value rendered with unit
+    })
+  })
+
+  it('toCsv unions keys across rows with different conditions/params', () => {
+    const other = { ...rawStudy, uuid: 'NNRG-doc-2', parameters: { Medium: 'water' }, effects: [
+      { endpoint: 'x', result: { loValue: 1 }, conditions: { Donor: 'D1' } },
+    ] }
+    const csv = toCsv(ambitStudiesToLongRows([rawStudy, other]))
+    const header = csv.split('\n')[0]
+    expect(header).toContain('param.ASSAY')
+    expect(header).toContain('param.Medium')
+    expect(header).toContain('cond.Donor')
   })
 })

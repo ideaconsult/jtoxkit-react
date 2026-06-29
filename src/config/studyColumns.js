@@ -1,5 +1,9 @@
-import '../utils/legacyGlobals.js'
+import { installLegacyGlobals } from '../utils/legacyGlobals.js'
 import { config_i5 } from './i5.js'
+
+// Install the jQuery `$`/iuuid/auuid shims the verbatim jToxKit render() callbacks need.
+// Called (not a bare side-effect import) so the library build can't tree-shake it away.
+installLegacyGlobals()
 import { config_bao } from './bao.js'
 import { config_npo } from './npo.js'
 import { config_exposure } from './exposure.js'

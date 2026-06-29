@@ -188,14 +188,21 @@ export function isDoseResponse(study, { minPoints = 1 } = {}) {
   return false
 }
 
+// Dose-axis condition keys, before conversion. Categories differ (the study config is
+// category-specific): some use CONCENTRATION, ECOTOX uses DOSE. pyambit only treats
+// CONCENTRATION* as an axis, so we normalize DOSE → CONCENTRATION in the payload below.
+const DOSE_AXIS_RE = /^(concentration|dose)/i
+
 // Cheap pre-check on RAW AMBIT studies (before conversion): does any effect carry a
-// CONCENTRATION-like condition? Used to decide whether to offer the dose-response toggle
-// without paying for a conversion round-trip.
+// dose-like condition (CONCENTRATION or DOSE)? Decides whether to offer the chart toggle.
+// The actual DOSE→CONCENTRATION axis bridging is done server-side (ramanchada-api
+// convertor_service), pending proper DOSE-axis support in pyambit's
+// convert_effectrecords2array — the frontend does not reimplement the conversion.
 export function ambitHasConcentration(studies) {
   for (const s of studies || []) {
     for (const e of s.effects || []) {
       for (const k of Object.keys(e.conditions || {})) {
-        if (CONC_RE.test(k)) return true
+        if (DOSE_AXIS_RE.test(k)) return true
       }
     }
   }
@@ -237,10 +244,88 @@ export function toLongRows(studies) {
   return rows
 }
 
-// Serialize long rows to a CSV string (simple RFC-4180-ish quoting).
+// Render an AMBIT value (string/number, or a {loValue,upValue,unit,textValue} object,
+// with an optional companion "<key> unit" value) to a compact string for CSV cells.
+function valStr(v, unit) {
+  if (v == null) return ''
+  if (typeof v === 'object') {
+    const u = unit || v.unit || ''
+    if (v.textValue != null && v.textValue !== '') return String(v.textValue) + (u ? ' ' + u : '')
+    const lo = v.loValue
+    const up = v.upValue
+    let s = lo != null ? String(lo) : ''
+    if (up != null && up !== lo) s = (s ? s + '–' : '') + up
+    return s + (u && s ? ' ' + u : '')
+  }
+  return String(v) + (unit ? ' ' + unit : '')
+}
+
+// Flatten the FULL RAW AMBIT studies (not the reduced EffectArrays) to long-format rows —
+// one row per effect — keeping all provenance so the CSV is self-contained: protocol,
+// guideline, provider/citation, reliability, investigation/assay UUIDs, study parameters
+// (param.*) and every effect condition (cond.*, incl. the real Treatment value) + result.
+export function ambitStudiesToLongRows(studies) {
+  const rows = []
+  for (const s of studies || []) {
+    const p = s.protocol || {}
+    const cat = p.category || {}
+    const cit = s.citation || {}
+    const params = s.parameters || {}
+    const base = {
+      document_uuid: s.uuid || '',
+      investigation_uuid: s.investigation_uuid || '',
+      assay_uuid: s.assay_uuid || '',
+      topcategory: p.topcategory || '',
+      category_code: cat.code || '',
+      category: cat.title || '',
+      protocol_endpoint: p.endpoint || '',
+      guideline: Array.isArray(p.guideline) ? p.guideline.join('; ') : p.guideline || '',
+      provider: cit.owner || '',
+      reference: cit.title || '',
+      reference_year: cit.year || '',
+      reliability: s.reliability?.r_value || '',
+    }
+    for (const [k, v] of Object.entries(params)) {
+      if (/ unit$/.test(k)) continue
+      base['param.' + k] = valStr(v, params[k + ' unit'])
+    }
+    const effects = Array.isArray(s.effects) && s.effects.length ? s.effects : [null]
+    for (const e of effects) {
+      const row = { ...base }
+      if (e) {
+        const r = e.result || {}
+        const cond = e.conditions || {}
+        row.effect_endpoint = e.endpoint || ''
+        row.effect_endpointtype = e.endpointtype || ''
+        row.result_loValue = r.loValue ?? ''
+        row.result_upValue = r.upValue ?? ''
+        row.result_qualifier = r.loQualifier ?? ''
+        row.result_unit = r.unit ?? ''
+        row.result_text = r.textValue ?? ''
+        row.error = r.errorValue ?? ''
+        row.error_qualifier = r.errQualifier ?? ''
+        for (const [k, v] of Object.entries(cond)) {
+          if (/ unit$/.test(k)) continue
+          row['cond.' + k] = valStr(v, cond[k + ' unit'])
+        }
+      }
+      rows.push(row)
+    }
+  }
+  return rows
+}
+
+// Serialize long rows to a CSV string (RFC-4180-ish quoting). Columns are the UNION of all
+// row keys, so rows with different parameters/conditions still line up.
 export function toCsv(rows) {
   if (!rows.length) return ''
-  const cols = Object.keys(rows[0])
+  const cols = []
+  const seen = new Set()
+  for (const r of rows) {
+    for (const k of Object.keys(r)) {
+      if (!seen.has(k)) { seen.add(k); cols.push(k) }
+    }
+  }
   const esc = (v) => {
     const s = v == null ? '' : String(v)
     return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s

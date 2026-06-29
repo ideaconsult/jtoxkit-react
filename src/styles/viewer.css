@@ -262,3 +262,15 @@
 .jtoxkit-root .jtox-dr-logx { display: flex; align-items: center; gap: 5px; cursor: pointer; }
 .jtoxkit-root .jtox-dr-plot { width: 100%; overflow-x: auto; }
 .jtoxkit-root .jtox-dr-plot figure { margin: 0; }
+/* provenance of the selected protocol application (owner / protocol / citation / doc id) */
+.jtoxkit-root .jtox-dr-provenance {
+  display: flex; flex-wrap: wrap; gap: 6px 16px;
+  margin: 0 0 8px; padding: 6px 10px;
+  font-size: 12px; color: var(--c-text-muted);
+  background: var(--c-surface-2); border-radius: var(--radius);
+}
+.jtoxkit-root .jtox-dr-provenance strong { color: var(--c-text); font-weight: 600; }
+.jtoxkit-root .jtox-dr-panel { margin: 0 0 14px; }
+.jtoxkit-root .jtox-dr-panel-title {
+  font-size: 13px; font-weight: 600; color: var(--c-text); margin-bottom: 2px;
+}
