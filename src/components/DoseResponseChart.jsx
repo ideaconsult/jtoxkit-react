@@ -7,9 +7,6 @@ import {
   classifyControl,
   seriesLabel,
 } from '../jsambit/index.js'
-import { buildStudyColumns, buildRepresentativeStudy } from '../utils/buildStudyColumns.js'
-import { renderCellHtml } from './DataCell.jsx'
-import { Html } from '../utils/Html.jsx'
 
 // Dose-response chart, structured to mirror how pyambit converts AMBIT → NeXus
 // (nexus_writer.process_pa / effectarray2data):
@@ -25,49 +22,66 @@ import { Html } from '../utils/Html.jsx'
 // panelsForStudy() keys panels by (endpoint, endpointtype, signal unit, dose-axis unit),
 // so units are never mixed on an axis and different endpointtypes stay separate.
 
-// Header fields are sourced from the SAME study config that drives the table (so the
-// display is consistent): the config defines e.cell_type → "Cell type", e.exposure_time →
-// "Exposure time", e.method → "Method" (bao.js/npo.js/exposure.js). We build the category's
-// columns with buildStudyColumns and pick those by their config title, then render their
-// values with the config's own render() — identical to the table cell.
-const HEADER_TITLE_RE = /cell[\s_]?type|exposure[\s_]?time|(^|[^a-z])method([^a-z]|$)/i
+// Header fields are declared in the SAME study config that drives the table, via an
+// `inHeader: true` flag (sibling to the existing `inMatrix`) on the field — e.g. e.cell_type
+// → "Cell type", e.exposure_time → "Exposure time", e.method → "Method" (bao.js/npo.js/
+// exposure.js). These fields are visible:false (shown inside the Protocol cell, not as their
+// own column), so we read the flag straight from the config rather than from built columns.
+const HEADER_GROUPS = ['conditions', 'parameters', 'effects', 'protocol', 'main', 'interpretation']
 
-// Render one header column's value for a study using the config render. Per-effect columns
-// (conditions like cell type / exposure time) are rendered across all effects and de-duped,
-// so a study with several values shows them all.
-function renderHeaderValue(col, study) {
-  if (col.perEffect && typeof col.renderEffect === 'function') {
-    const seen = new Set()
-    for (const e of study.effects || []) {
-      let h = ''
-      try { h = col.renderEffect(e) } catch { h = '' }
-      h = String(h ?? '').trim()
-      if (h && h !== '-') seen.add(h)
+// Collect { key, title, group } for every field flagged inHeader in the category config
+// (category overrides the `_` defaults, deduped by group+key).
+function configHeaderFields(columns, category) {
+  if (!columns) return []
+  const found = new Map()
+  for (const cat of ['_', category]) {
+    const node = columns[cat]
+    if (!node) continue
+    for (const group of HEADER_GROUPS) {
+      const g = node[group]
+      if (!g || typeof g !== 'object') continue
+      for (const [key, def] of Object.entries(g)) {
+        if (def && typeof def === 'object' && def.inHeader === true) {
+          found.set(group + '|' + key, { key, title: def.title || key, group })
+        }
+      }
     }
-    return [...seen].join(', ')
   }
-  const h = renderCellHtml(col, study)
-  const s = String(h ?? '').trim()
-  return s === '-' ? '' : s
+  return [...found.values()]
 }
 
-// The config-defined context columns (cell type / exposure time / method) for the selected
-// raw study, rendered exactly as the table renders them. Returns [{ title, html }].
-function configHeaderColumns(study, category, columns) {
-  if (!study || !category || !columns) return []
-  let cols
-  try {
-    cols = buildStudyColumns(buildRepresentativeStudy([study]), category, columns)
-  } catch {
-    return []
+// Render an AMBIT value (string/number or {loValue,unit,textValue}) with optional companion unit.
+function fmtVal(v, unit) {
+  if (v == null) return ''
+  if (typeof v === 'object') {
+    const u = unit || v.unit || ''
+    if (v.textValue) return String(v.textValue)
+    const lo = v.loValue
+    return (lo != null ? String(lo) : '') + (u ? ' ' + u : '')
   }
-  const out = []
-  for (const col of cols) {
-    if (!HEADER_TITLE_RE.test(String(col.title || ''))) continue
-    const html = renderHeaderValue(col, study)
-    if (html) out.push({ title: col.title, html })
+  return String(v) + (unit ? ' ' + unit : '')
+}
+
+// Distinct values of one inHeader field for the selected option, found case-insensitively
+// in the raw study (effect conditions / study parameters) and the converted arrays.
+function headerFieldValue(field, opt) {
+  const lk = field.key.toLowerCase()
+  const vals = new Set()
+  const collect = (obj) => {
+    if (!obj) return
+    for (const [k, v] of Object.entries(obj)) {
+      if (/ unit$/.test(k) || k.toLowerCase() !== lk || v == null) continue
+      const s = fmtVal(v, obj[k + ' unit']).trim()
+      if (s && s !== '-') vals.add(s)
+    }
   }
-  return out
+  if (field.group === 'parameters' || field.group === 'main') {
+    collect(opt.raw?.parameters)
+  } else {
+    for (const e of opt.raw?.effects || []) collect(e.conditions)
+    for (const a of opt.study?.arrays || []) collect(a.conditions)
+  }
+  return [...vals].join(', ')
 }
 
 // Concise dropdown label: owner · protocol/guideline · endpoint(s) (year). Cell type and
@@ -184,8 +198,12 @@ export default function DoseResponseChart({ studies, rawStudies, columns, catego
   const c = cur.study.citation || {}
   const p = cur.study.protocol || {}
   const guideline = Array.isArray(p.guideline) ? p.guideline.filter(Boolean).join(', ') : p.guideline
-  // cell type / exposure time / method — rendered from the study config, same as the table
-  const headerCols = configHeaderColumns(cur.raw, category, columns)
+  // Header context fields declared in the study config via `inHeader` (cell type / exposure
+  // time / method / species …) — same config that drives the table, so titles are consistent.
+  // (Plain const, not useMemo: this runs after the early return above — Rules of Hooks.)
+  const headerItems = configHeaderFields(columns, category)
+    .map((f) => ({ title: f.title, value: headerFieldValue(f, cur) }))
+    .filter((h) => h.value)
   const reliability = cur.raw?.reliability?.r_value
 
   return (
@@ -213,8 +231,8 @@ export default function DoseResponseChart({ studies, rawStudies, columns, catego
       <div className="jtox-dr-provenance">
         {c.owner && <span><strong>Owner:</strong> {c.owner}</span>}
         {guideline && <span><strong>Protocol:</strong> {guideline}</span>}
-        {headerCols.map((h, i) => (
-          <span key={i}><strong>{h.title}:</strong> <Html html={h.html} /></span>
+        {headerItems.map((h, i) => (
+          <span key={i}><strong>{h.title}:</strong> {h.value}</span>
         ))}
         {reliability && <span><strong>Reliability:</strong> {reliability}</span>}
         {c.title && <span><strong>Citation:</strong> {c.title}{c.year ? ` (${c.year})` : ''}</span>}

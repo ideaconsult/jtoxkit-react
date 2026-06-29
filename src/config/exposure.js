@@ -307,7 +307,9 @@ export const config_exposure = {
 			"visible" : false
 		},
 		"e.method" : {
-			"visible" : false
+			"visible" : false,
+			"inHeader" : true,
+			"title" : "Method"
 		},
 		"matrix_characteristics.matrix_type": {
 			"title" : "Matrix type",

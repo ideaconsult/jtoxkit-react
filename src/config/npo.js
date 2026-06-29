@@ -175,6 +175,7 @@ export const config_npo = {
 		"e.method" : {
 			"visible" : false,
 			"inMatrix" : true,
+			"inHeader" : true,
 			"title" : "Method"
 		},
 		"e.sop_reference" : {
@@ -185,6 +186,7 @@ export const config_npo = {
 		"e.cell_type" : {
 			"visible" : false,
 			"inMatrix" : true,
+			"inHeader" : true,
 			"title" : "Cell type"
 		},
 		"e.organ" : {
@@ -195,11 +197,13 @@ export const config_npo = {
 		"e.animal_model" : {
 			"visible" : false,
 			"inMatrix" : true,
+			"inHeader" : true,
 			"title" : "Species"
 		},
 		"e.exposure_time" : {
 			"visible" : false,
 			"inMatrix" : true,
+			"inHeader" : true,
 			"title" : "Exposure time"
 		}
 	},
