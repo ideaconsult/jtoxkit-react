@@ -1,39 +1,34 @@
 import { createContext, useContext, useMemo } from 'react'
 
-// Runtime configuration for the viewer. When embedded as a package, the host passes
-// these as props (it has its own AMBIT base, diagram preference, column config). When
-// run standalone, everything falls back to the app's Vite env vars.
+// Runtime configuration for the viewer. Embedded hosts and the standalone app shell pass
+// these as props so published library code stays independent from Vite env variables.
 const ViewerConfigContext = createContext(null)
 
-const ENV = import.meta.env || {}
-
-const DEFAULTS = {
-  apiBase: (ENV.VITE_AMBIT_URL ?? '').replace(/\/$/, ''),
+export const DEFAULT_VIEWER_CONFIG = {
+  apiBase: '',
   // ramanchada-api base, used only for the dose-response conversion endpoint
   // (POST {convertBase}/dataset/convert?format=effectarray). AMBIT substance/study reads
-  // still go direct to apiBase. The host passes this (spectrasearch: its VITE_BaseURL).
-  // Empty ⇒ the dose-response chart is simply not offered.
+  // still go direct to apiBase. Empty means the dose-response chart is not offered.
   convertBase: '',
   showDiagrams: false,
   // null ⇒ StudyTable uses the bundled default study config (config_study)
   columnConfig: null,
-  // Dev-only: rewrite absolute AMBIT URLs onto a same-origin proxy to avoid CORS.
-  // e.g. VITE_AMBIT_PROXY_FROM=https://apps.ideaconsult.net  VITE_AMBIT_PROXY_TO=/ambit
-  proxyFrom: ENV.VITE_AMBIT_PROXY_FROM || '',
-  proxyTo: ENV.VITE_AMBIT_PROXY_TO || ''
+  // Optional: rewrite absolute AMBIT URLs onto a same-origin proxy to avoid CORS.
+  proxyFrom: '',
+  proxyTo: ''
 }
 
 export function ViewerConfigProvider({ value, children }) {
-  // Strip undefined/null overrides so they fall back to DEFAULTS.
+  // Strip undefined/null overrides so they fall back to package defaults.
   const merged = useMemo(() => {
     const clean = Object.fromEntries(
       Object.entries(value || {}).filter(([, v]) => v !== undefined && v !== null)
     )
     return {
-      ...DEFAULTS,
+      ...DEFAULT_VIEWER_CONFIG,
       ...clean,
-      apiBase: (clean.apiBase ?? DEFAULTS.apiBase).replace(/\/$/, ''),
-      convertBase: (clean.convertBase ?? DEFAULTS.convertBase).replace(/\/$/, '')
+      apiBase: (clean.apiBase ?? DEFAULT_VIEWER_CONFIG.apiBase).replace(/\/$/, ''),
+      convertBase: (clean.convertBase ?? DEFAULT_VIEWER_CONFIG.convertBase).replace(/\/$/, '')
     }
   }, [value])
 
@@ -44,4 +39,4 @@ export function ViewerConfigProvider({ value, children }) {
   )
 }
 
-export const useViewerConfig = () => useContext(ViewerConfigContext) || DEFAULTS
+export const useViewerConfig = () => useContext(ViewerConfigContext) || DEFAULT_VIEWER_CONFIG

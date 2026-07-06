@@ -69,6 +69,8 @@ runtime dependency bundled by the library for sanitizing legacy renderer HTML.
 | `showDiagrams` | bool | Show structure images in the composition table. |
 | `columnConfig` | object | Study column config; accepts the existing jToxKit `config_study` object. |
 | `initialTab` | string | Top category to open first, for example `TOX`. |
+| `proxyFrom` | string | Optional URL prefix to rewrite in AMBIT-returned URLs. Mostly useful for standalone/dev proxying. |
+| `proxyTo` | string | Optional replacement prefix used with `proxyFrom`. |
 | `source` | object | Inject a custom data source adapter; defaults to AMBIT REST. |
 
 ## Standalone App

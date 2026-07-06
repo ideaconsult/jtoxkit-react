@@ -78,8 +78,8 @@ src/
 ## Reusable Library Boundary
 
 - Embedded hosts pass runtime configuration as props: `substanceUri`, `substanceId`,
-  `apiBase`, `convertBase`, `token`, `showDiagrams`, `columnConfig`, `initialTab`, and
-  `source`.
+  `apiBase`, `convertBase`, `token`, `showDiagrams`, `columnConfig`, `initialTab`,
+  `proxyFrom`, `proxyTo`, and `source`.
 - Standalone URL parsing belongs in `src/App.jsx` only.
 - Standalone Vite environment variables belong in `src/App.jsx` and build-tool config only.
   Reusable library files must receive config through props/context, not `import.meta.env`,

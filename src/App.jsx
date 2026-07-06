@@ -1,7 +1,9 @@
 import SubstanceStudyViewer from './SubstanceStudyViewer'
 
-// Standalone dev entry: read what to show from the URL. Embedded hosts pass props
-// instead (see PredictionsPage.jsx in spectrasearch-viewers for the qubounds analogue).
+const ENV = import.meta.env || {}
+
+// Standalone dev entry: read what to show from the URL and Vite env. Embedded hosts pass
+// equivalent values as props instead.
 //   ?substanceUri=<full AMBIT substance URL>
 //   ?substanceId=<uuid>&apiBase=<AMBIT base>
 //   ?showDiagrams=true&tab=TOX
@@ -14,8 +16,10 @@ export default function App() {
     <SubstanceStudyViewer
       substanceUri={params.get('substanceUri') || undefined}
       substanceId={params.get('substanceId') || undefined}
-      apiBase={params.get('apiBase') || undefined}
-      convertBase={params.get('convertBase') || import.meta.env.VITE_RCAPI_URL || undefined}
+      apiBase={params.get('apiBase') || ENV.VITE_AMBIT_URL || undefined}
+      convertBase={params.get('convertBase') || ENV.VITE_RCAPI_URL || undefined}
+      proxyFrom={ENV.VITE_AMBIT_PROXY_FROM || undefined}
+      proxyTo={ENV.VITE_AMBIT_PROXY_TO || undefined}
       showDiagrams={params.get('showDiagrams') === 'true'}
       initialTab={params.get('tab') || undefined}
       showHeader
