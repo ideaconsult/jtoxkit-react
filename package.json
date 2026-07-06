@@ -66,7 +66,7 @@
     "@observablehq/plot": "^0.6.15",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
-    "@vitejs/plugin-react": "^5.1.4",
+    "@vitejs/plugin-react": "^6.0.3",
     "jsdom": "^28.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
