@@ -10,10 +10,9 @@ export function renderCellHtml(colDef, row) {
   try {
     if (typeof r === 'function') return r(value, 'display', row)
     if (typeof r === 'string') return renderStringShorthand(value, r)
-  } catch (e) {
+  } catch {
     // A legacy config render() threw (missing global or unexpected data shape) — degrade
     // to the raw value instead of crashing the whole table.
-    if (import.meta.env?.DEV) console.warn('[jtoxkit] render() failed for column', colDef.title, e)
   }
   if (value == null) return colDef.defaultContent ?? ''
   if (typeof value === 'object') return colDef.defaultContent ?? ''

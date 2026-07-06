@@ -1,9 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useDataSource } from '../context/DataSource'
 
-// Generic single-call loader bound to one data-source method. Mirrors qubounds
-// useSolr: a `load(uri)` callback + { data, loading, error } state, with the in-flight
-// request aborted on a new call or unmount.
+// Generic single-call loader bound to one data-source method: a `load(uri)` callback plus
+// { data, loading, error } state, with the in-flight request aborted on a new call or
+// unmount.
 export function useAmbitCall(method) {
   const source = useDataSource()
   const [data, setData] = useState(null)

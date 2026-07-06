@@ -10,7 +10,7 @@ const AuthContext = createContext(null)
 const STORAGE_KEY = 'jtoxkit_token'
 
 function readToken() {
-  // 1. URL param (deep-link pattern, same as qubounds / h5web)
+  // 1. URL param (deep-link pattern for standalone viewers)
   const params = new URLSearchParams(window.location.search)
   const urlToken = params.get('token')
   if (urlToken) {

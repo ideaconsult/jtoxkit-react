@@ -53,13 +53,12 @@ function ViewerBody({ substanceUri, substanceId, initialTab, showHeader }) {
 }
 
 // Public component. Auth: `token` (when provided) is owned by the host; omitted ⇒
-// standalone reads URL/sessionStorage. Config: apiBase / showDiagrams / columnConfig
-// override the build-time env defaults. `source` injects a custom data source (defaults
-// to the AMBIT REST adapter).
+// passive URL/sessionStorage/postMessage auth is used. Config props override package
+// defaults. `source` injects a custom data source (defaults to the AMBIT REST adapter).
 export default function SubstanceStudyViewer({
-  token, apiBase, convertBase, showDiagrams, columnConfig, source, ...body
+  token, apiBase, convertBase, showDiagrams, columnConfig, proxyFrom, proxyTo, source, ...body
 }) {
-  const configValue = { apiBase, convertBase, showDiagrams, columnConfig }
+  const configValue = { apiBase, convertBase, showDiagrams, columnConfig, proxyFrom, proxyTo }
   return (
     <ViewerConfigProvider value={configValue}>
       <AuthProvider token={token ?? undefined}>
