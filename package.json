@@ -2,8 +2,28 @@
   "name": "@ideaconsult/jtoxkit-react",
   "version": "0.1.0",
   "description": "Embeddable React viewer for eNanoMapper/AMBIT substance, composition and study data. React rewrite of the jToxKit Study/Substance kits.",
-  "private": true,
+  "license": "Apache-2.0",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ideaconsult/jtoxkit-react.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ideaconsult/jtoxkit-react/issues"
+  },
+  "homepage": "https://github.com/ideaconsult/jtoxkit-react#readme",
+  "keywords": [
+    "ambit",
+    "enanomapper",
+    "jtoxkit",
+    "react",
+    "study",
+    "substance",
+    "viewer"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "dist"
   ],
