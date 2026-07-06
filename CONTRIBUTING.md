@@ -186,6 +186,63 @@ pnpm pack --dry-run
 Verify `dist/jtoxkit-react.js` has no `import.meta.env` or `VITE_` references before
 release.
 
+## Local Host Integration Development
+
+Use the standalone app for the fastest feedback while working on viewer internals:
+
+```sh
+pnpm dev
+```
+
+This serves the package's own `/jtoxkit/` app directly from `src/` through Vite.
+
+When a change must be checked inside a host app such as `spectrasearch`, prefer a local
+pnpm link over changing the host's committed dependency spec. The library package exposes
+the built `dist/` entry, so keep the library build running in watch mode:
+
+```sh
+# in jtoxkit-react
+pnpm build:lib -- --watch
+```
+
+In the host app, link the local checkout and force Vite to rebuild its optimized dependency
+cache:
+
+```sh
+# in spectrasearch, assuming sibling checkouts under the same parent directory
+pnpm link ../jtoxkit-react
+pnpm dev -- --force
+```
+
+If a later library rebuild is not picked up by the browser, restart the host dev server
+with `pnpm dev -- --force` again. To return the host to normal registry dependencies:
+
+```sh
+pnpm unlink @ideaconsult/jtoxkit-react
+pnpm install --frozen-lockfile
+pnpm dev -- --force
+```
+
+Use `pnpm pack` for package-consumer smoke tests, not for everyday live debugging. This
+checks the exact tarball contents a consumer would install:
+
+```sh
+# in jtoxkit-react
+pnpm build:lib
+pnpm pack --pack-destination /tmp/viewer-packs
+```
+
+Then, in a host app and preferably on a throwaway branch:
+
+```sh
+pnpm add /tmp/viewer-packs/ideaconsult-jtoxkit-react-0.1.0.tgz
+pnpm dev -- --force
+```
+
+Installing a tarball modifies `package.json` and `pnpm-lock.yaml`; restore the normal semver
+dependency before committing. Committed `file:` or local `.tgz` dependencies are not a
+release or CI distribution strategy.
+
 ## Embedding Contract
 
 Consumers should depend on the npm package and import the component and CSS:
