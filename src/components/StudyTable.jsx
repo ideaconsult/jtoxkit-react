@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Html } from '../utils/Html.jsx'
 import { renderCellHtml } from './DataCell.jsx'
 import { buildStudyColumns, buildRepresentativeStudy } from '../utils/buildStudyColumns.js'
@@ -36,11 +36,15 @@ function rowText(study, colDefs) {
 // One study → N table rows (one per effect). Per-study columns are emitted once on the
 // first row and span all the effect rows (rowSpan), so each effect lines up as a grid row
 // across the Endpoint/Result/condition columns — the aligned layout the legacy produced.
-function StudyRows({ study, colDefs }) {
+function StudyRows({ study, colDefs, focused, focusRef }) {
   const effects = Array.isArray(study.effects) && study.effects.length ? study.effects : [null]
   const n = effects.length
   return effects.map((effect, i) => (
-    <tr key={i}>
+    <tr
+      key={i}
+      className={focused ? 'jtox-row-focus' : undefined}
+      ref={focused && i === 0 ? focusRef : undefined}
+    >
       {colDefs.map((c, ci) => {
         if (isEffectCol(c)) {
           return <Html key={ci} as="td" className={c.className} html={safeRenderEffect(c, effect)} />
@@ -57,8 +61,9 @@ function StudyRows({ study, colDefs }) {
 // (buildStudyColumns) and overridden by the column config; cells render via the shim.
 // Column widths are intentionally NOT set as inline styles — table-layout:auto distributes
 // space by content so no group of columns gets artificially cramped.
-export default function StudyTable({ studies, category, columns, filter }) {
+export default function StudyTable({ studies, category, columns, filter, focusUuid }) {
   const [page, setPage] = useState(0)
+  const focusRef = useRef(null)
 
   const colDefs = useMemo(() => {
     if (!studies?.length) return []
@@ -73,6 +78,24 @@ export default function StudyTable({ studies, category, columns, filter }) {
 
   // Reset to page 0 whenever the filter or category changes.
   useEffect(() => { setPage(0) }, [filter, category])
+
+  // A focused study (document_uuid = study.uuid) can sit on any page, so page to it —
+  // after the reset above, and again if a filter moves it. -1 when it isn't in this
+  // category at all, which is the normal case for every category but one.
+  const focusIndex = useMemo(
+    () => (focusUuid ? filtered.findIndex((s) => s.uuid === focusUuid) : -1),
+    [filtered, focusUuid]
+  )
+  useEffect(() => {
+    if (focusIndex >= 0) setPage(Math.floor(focusIndex / PAGE_SIZE))
+  }, [focusIndex])
+
+  // Bring it into view once it is actually rendered. Optional call: jsdom (tests) and
+  // older browsers don't implement scrollIntoView.
+  useEffect(() => {
+    if (focusIndex < 0) return
+    focusRef.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
+  }, [focusIndex, page])
 
   if (!studies?.length) return null
 
@@ -93,7 +116,13 @@ export default function StudyTable({ studies, category, columns, filter }) {
         </thead>
         <tbody>
           {rows.map((s, ri) => (
-            <StudyRows key={s.uuid || ri} study={s} colDefs={colDefs} />
+            <StudyRows
+              key={s.uuid || ri}
+              study={s}
+              colDefs={colDefs}
+              focused={!!focusUuid && s.uuid === focusUuid}
+              focusRef={focusRef}
+            />
           ))}
         </tbody>
       </table>

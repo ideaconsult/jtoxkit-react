@@ -23,7 +23,7 @@ function download(name, text, mime) {
 // appears only when the category looks like dose-response AND the host configured a
 // ramanchada-api convert base. In chart mode the studies are converted to plottable
 // EffectArrays (pyambit) once and cached for this section.
-export default function CategorySection({ group, columns, filter, substance }) {
+export default function CategorySection({ group, columns, filter, substance, focusUuid }) {
   const source = useDataSource()
   const canConvert = !!source?.canConvert
   const detectable = useMemo(() => ambitHasConcentration(group.studies), [group.studies])
@@ -103,10 +103,17 @@ export default function CategorySection({ group, columns, filter, substance }) {
             rawStudies={group.studies}
             columns={columns}
             category={group.code}
+            focusUuid={focusUuid}
           />
         )
       ) : (
-        <StudyTable studies={group.studies} category={group.code} columns={columns} filter={filter} />
+        <StudyTable
+          studies={group.studies}
+          category={group.code}
+          columns={columns}
+          filter={filter}
+          focusUuid={focusUuid}
+        />
       )}
     </div>
   )

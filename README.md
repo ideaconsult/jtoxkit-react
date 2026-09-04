@@ -69,6 +69,7 @@ runtime dependency bundled by the library for sanitizing legacy renderer HTML.
 | `showDiagrams` | bool | Show structure images in the composition table. |
 | `columnConfig` | object | Study column config; accepts the existing jToxKit `config_study` object. |
 | `initialTab` | string | Top category to open first, for example `TOX`. |
+| `documentUuid` | string | Open one study — its AMBIT `uuid`, the `document_uuid` of a protocol application. The tab holding it is found for you, the table pages to it, and its row is marked. Pass `initialTab` as well when the category is already known; it saves loading the other tabs. |
 | `proxyFrom` | string | Optional URL prefix to rewrite in AMBIT-returned URLs. Mostly useful for standalone/dev proxying. |
 | `proxyTo` | string | Optional replacement prefix used with `proxyFrom`. |
 | `source` | object | Inject a custom data source adapter; defaults to AMBIT REST. |
@@ -83,6 +84,7 @@ Useful standalone URLs:
 - `http://localhost:5175/jtoxkit/?substanceUri=<AMBIT substance URL>`
 - `http://localhost:5175/jtoxkit/?substanceId=<uuid>&apiBase=<AMBIT base>&showDiagrams=true`
 - `http://localhost:5175/jtoxkit/?substanceId=<uuid>&tab=TOX`
+- `http://localhost:5175/jtoxkit/?substanceId=<uuid>&study=<document_uuid>`
 
 Standalone environment variables are documented in `.env.example`. Embedded hosts should
 pass equivalent values as component props instead of relying on this package's Vite env.

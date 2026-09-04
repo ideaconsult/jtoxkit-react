@@ -122,6 +122,13 @@
 }
 .jtoxkit-root table.jtox-table tbody tr:nth-child(even) { background: rgba(0,0,0,0.018); }
 
+/* The study a host asked for by document_uuid. Class beats the nth-child stripe above,
+   so the marker survives whatever row parity it lands on. */
+.jtoxkit-root table.jtox-table tbody tr.jtox-row-focus {
+  background: #fff6d6;
+  box-shadow: inset 3px 0 0 #e0a800;
+}
+
 /* Per-effect columns: each effect is its own table row (rowSpan on per-study columns),
    so this is just a marker on the cell — must NOT be display:flex or it breaks the table
    column layout. The div.jtox-multi wrapper styling only applies to the renderMulti

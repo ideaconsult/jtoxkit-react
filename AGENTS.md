@@ -79,7 +79,10 @@ src/
 
 - Embedded hosts pass runtime configuration as props: `substanceUri`, `substanceId`,
   `apiBase`, `convertBase`, `token`, `showDiagrams`, `columnConfig`, `initialTab`,
-  `proxyFrom`, `proxyTo`, and `source`.
+  `documentUuid`, `proxyFrom`, `proxyTo`, and `source`.
+- `documentUuid` focuses one study (AMBIT `study.uuid` = `document_uuid`). studysummary
+  only counts studies per topcategory, so `StudyViewer` sweeps the tabs — each loading at
+  most once — until one contains it, then `StudyTable` pages to it and marks the row.
 - Standalone URL parsing belongs in `src/App.jsx` only.
 - Standalone Vite environment variables belong in `src/App.jsx` and build-tool config only.
   Reusable library files must receive config through props/context, not `import.meta.env`,

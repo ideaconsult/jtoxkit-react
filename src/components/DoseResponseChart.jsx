@@ -167,7 +167,7 @@ function Panel({ panel, logX }) {
   )
 }
 
-export default function DoseResponseChart({ studies, rawStudies, columns, category }) {
+export default function DoseResponseChart({ studies, rawStudies, columns, category, focusUuid }) {
   // Raw AMBIT studies keyed by document_uuid (= study.uuid), for header details the
   // pyambit conversion drops (reliability) or doesn't surface cleanly (cell type / time).
   const rawByUuid = useMemo(() => {
@@ -191,6 +191,16 @@ export default function DoseResponseChart({ studies, rawStudies, columns, catego
   )
   const [logX, setLogX] = useState(true)
   const [sel, setSel] = useState(0)
+
+  // A host-focused study selects its own protocol application rather than the first one.
+  // (Hooks before the early return below — Rules of Hooks.)
+  const focusIdx = useMemo(
+    () => (focusUuid ? options.findIndex((o) => o.study.documentUuid === focusUuid) : -1),
+    [options, focusUuid]
+  )
+  useEffect(() => {
+    if (focusIdx >= 0) setSel(focusIdx)
+  }, [focusIdx])
 
   if (!options.length) return <div className="jtox-empty">No dose-response data for this category.</div>
 
