@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Html } from '../utils/Html.jsx'
 import { renderCellHtml } from './DataCell.jsx'
 import { buildStudyColumns, buildRepresentativeStudy } from '../utils/buildStudyColumns.js'
@@ -36,15 +36,11 @@ function rowText(study, colDefs) {
 // One study → N table rows (one per effect). Per-study columns are emitted once on the
 // first row and span all the effect rows (rowSpan), so each effect lines up as a grid row
 // across the Endpoint/Result/condition columns — the aligned layout the legacy produced.
-function StudyRows({ study, colDefs, focused, focusRef }) {
+function StudyRows({ study, colDefs }) {
   const effects = Array.isArray(study.effects) && study.effects.length ? study.effects : [null]
   const n = effects.length
   return effects.map((effect, i) => (
-    <tr
-      key={i}
-      className={focused ? 'jtox-row-focus' : undefined}
-      ref={focused && i === 0 ? focusRef : undefined}
-    >
+    <tr key={i}>
       {colDefs.map((c, ci) => {
         if (isEffectCol(c)) {
           return <Html key={ci} as="td" className={c.className} html={safeRenderEffect(c, effect)} />
@@ -63,39 +59,29 @@ function StudyRows({ study, colDefs, focused, focusRef }) {
 // space by content so no group of columns gets artificially cramped.
 export default function StudyTable({ studies, category, columns, filter, focusUuid }) {
   const [page, setPage] = useState(0)
-  const focusRef = useRef(null)
 
   const colDefs = useMemo(() => {
     if (!studies?.length) return []
     return buildStudyColumns(buildRepresentativeStudy(studies), category, columns)
   }, [studies, category, columns])
 
+  // Scoped to the one study a host linked to (StudyViewer owns the scope and the way out
+  // of it; this only narrows the rows). The text filter is bypassed while scoped — it
+  // would otherwise be able to hide the very study the link asked for.
+  const focusedStudy = useMemo(
+    () => (focusUuid ? (studies || []).find((s) => s.uuid === focusUuid) : null),
+    [studies, focusUuid]
+  )
+
   const filtered = useMemo(() => {
+    if (focusedStudy) return [focusedStudy]
     const q = (filter || '').trim().toLowerCase()
     if (!q) return studies || []
     return (studies || []).filter((s) => rowText(s, colDefs).includes(q))
-  }, [studies, colDefs, filter])
+  }, [studies, colDefs, filter, focusedStudy])
 
-  // Reset to page 0 whenever the filter or category changes.
-  useEffect(() => { setPage(0) }, [filter, category])
-
-  // A focused study (document_uuid = study.uuid) can sit on any page, so page to it —
-  // after the reset above, and again if a filter moves it. -1 when it isn't in this
-  // category at all, which is the normal case for every category but one.
-  const focusIndex = useMemo(
-    () => (focusUuid ? filtered.findIndex((s) => s.uuid === focusUuid) : -1),
-    [filtered, focusUuid]
-  )
-  useEffect(() => {
-    if (focusIndex >= 0) setPage(Math.floor(focusIndex / PAGE_SIZE))
-  }, [focusIndex])
-
-  // Bring it into view once it is actually rendered. Optional call: jsdom (tests) and
-  // older browsers don't implement scrollIntoView.
-  useEffect(() => {
-    if (focusIndex < 0) return
-    focusRef.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
-  }, [focusIndex, page])
+  // Reset to page 0 whenever the filter, category, or scope changes.
+  useEffect(() => { setPage(0) }, [filter, category, focusedStudy])
 
   if (!studies?.length) return null
 
@@ -116,17 +102,11 @@ export default function StudyTable({ studies, category, columns, filter, focusUu
         </thead>
         <tbody>
           {rows.map((s, ri) => (
-            <StudyRows
-              key={s.uuid || ri}
-              study={s}
-              colDefs={colDefs}
-              focused={!!focusUuid && s.uuid === focusUuid}
-              focusRef={focusRef}
-            />
+            <StudyRows key={s.uuid || ri} study={s} colDefs={colDefs} />
           ))}
         </tbody>
       </table>
-      {filtered.length === 0 && filter && (
+      {filtered.length === 0 && filter && !focusedStudy && (
         <div className="jtox-empty">No studies match &ldquo;{filter}&rdquo;.</div>
       )}
       {totalPages > 1 && (

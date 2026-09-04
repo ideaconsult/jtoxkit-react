@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useStudies } from '../hooks/useAmbit.js'
 import { useViewerConfig } from '../context/ViewerConfig.jsx'
 import { config_study } from '../config/studyColumns.js'
+import { groupWithStudy, countStudies } from '../utils/focusScope.js'
 import CategorySection from './CategorySection.jsx'
 
 const KNOWN = { 'P-CHEM': 'P-Chem', ENV_FATE: 'Env Fate', ECOTOX: 'Eco Tox', TOX: 'Tox' }
@@ -56,6 +57,10 @@ function StudyTab({ tab, cached, onLoaded, substance, focusUuid }) {
 
   const [filter, setFilter] = useState('')
   const [collapsed, setCollapsed] = useState(() => new Set())
+  // Escape hatch out of a focusUuid scope; a new link re-scopes rather than keeping a
+  // stale "show all" from the previous one.
+  const [showAll, setShowAll] = useState(false)
+  useEffect(() => { setShowAll(false) }, [focusUuid])
 
   useEffect(() => {
     if (!cached) load(tab.uri)
@@ -65,7 +70,12 @@ function StudyTab({ tab, cached, onLoaded, substance, focusUuid }) {
     if (!cached && data) onLoaded(tab.key, data)
   }, [data, cached, tab.key, onLoaded])
 
-  const groups = useMemo(() => groupByCategory(studies), [studies])
+  const allGroups = useMemo(() => groupByCategory(studies), [studies])
+  // A deep link narrows the tab to the category holding that study -- the other categories
+  // of the same topcategory are unrelated to it and can run to hundreds of rows.
+  const focusGroup = useMemo(() => groupWithStudy(allGroups, focusUuid), [allGroups, focusUuid])
+  const scoped = !!focusGroup && !showAll
+  const groups = scoped ? [focusGroup] : allGroups
 
   if (loading && !studies) return <div className="jtox-loading">Loading studies…</div>
   if (error) return <div className="jtox-error">Error loading studies: {error}</div>
@@ -94,6 +104,14 @@ function StudyTab({ tab, cached, onLoaded, substance, focusUuid }) {
           {allCollapsed ? 'Expand all' : 'Collapse all'}
         </button>
       </div>
+      {scoped && (
+        <div className="jtox-scope-note">
+          Showing the one study this link points at.{' '}
+          <button type="button" className="jtox-link-btn" onClick={() => setShowAll(true)}>
+            Show all {countStudies(allGroups)} studies in {tab.label}
+          </button>
+        </div>
+      )}
       {groups.map((g) => (
         <FoldableCategory
           key={g.code}
@@ -106,7 +124,7 @@ function StudyTab({ tab, cached, onLoaded, substance, focusUuid }) {
             columns={columns}
             filter={filter}
             substance={substance}
-            focusUuid={focusUuid}
+            focusUuid={scoped ? focusUuid : undefined}
           />
         </FoldableCategory>
       ))}

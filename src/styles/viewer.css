@@ -122,11 +122,11 @@
 }
 .jtoxkit-root table.jtox-table tbody tr:nth-child(even) { background: rgba(0,0,0,0.018); }
 
-/* The study a host asked for by document_uuid. Class beats the nth-child stripe above,
-   so the marker survives whatever row parity it lands on. */
-.jtoxkit-root table.jtox-table tbody tr.jtox-row-focus {
-  background: #fff6d6;
-  box-shadow: inset 3px 0 0 #e0a800;
+/* focusUuid scope banner — the tab is narrowed to the one study a link points at. */
+.jtoxkit-root .jtox-scope-note {
+  color: var(--c-text-muted);
+  font-size: 13px;
+  margin: 4px 0 10px;
 }
 
 /* Per-effect columns: each effect is its own table row (rowSpan on per-study columns),
