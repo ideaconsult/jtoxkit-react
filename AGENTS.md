@@ -80,6 +80,10 @@ src/
 - Embedded hosts pass runtime configuration as props: `substanceUri`, `substanceId`,
   `apiBase`, `convertBase`, `token`, `showDiagrams`, `columnConfig`, `initialTab`,
   `documentUuid`, `proxyFrom`, `proxyTo`, and `source`.
+- `documentUuid` exists so a study-level search hit can open the study itself. A host index
+  (spectrasearch) returns studies as well as substances, identified by `document_uuid`;
+  without this prop such a hit could only open the parent substance, leaving the user to
+  re-find the study among hundreds of sibling rows.
 - `documentUuid` focuses one study (AMBIT `study.uuid` = `document_uuid`). studysummary
   only counts studies per topcategory, so `StudyViewer` sweeps the tabs — each loading at
   most once — until one contains it. `StudyTab` then narrows to the single category group
