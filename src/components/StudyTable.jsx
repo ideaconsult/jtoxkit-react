@@ -57,7 +57,7 @@ function StudyRows({ study, colDefs }) {
 // (buildStudyColumns) and overridden by the column config; cells render via the shim.
 // Column widths are intentionally NOT set as inline styles — table-layout:auto distributes
 // space by content so no group of columns gets artificially cramped.
-export default function StudyTable({ studies, category, columns, filter }) {
+export default function StudyTable({ studies, category, columns, filter, focusUuid }) {
   const [page, setPage] = useState(0)
 
   const colDefs = useMemo(() => {
@@ -65,14 +65,23 @@ export default function StudyTable({ studies, category, columns, filter }) {
     return buildStudyColumns(buildRepresentativeStudy(studies), category, columns)
   }, [studies, category, columns])
 
+  // Scoped to the one study a host linked to (StudyViewer owns the scope and the way out
+  // of it; this only narrows the rows). The text filter is bypassed while scoped — it
+  // would otherwise be able to hide the very study the link asked for.
+  const focusedStudy = useMemo(
+    () => (focusUuid ? (studies || []).find((s) => s.uuid === focusUuid) : null),
+    [studies, focusUuid]
+  )
+
   const filtered = useMemo(() => {
+    if (focusedStudy) return [focusedStudy]
     const q = (filter || '').trim().toLowerCase()
     if (!q) return studies || []
     return (studies || []).filter((s) => rowText(s, colDefs).includes(q))
-  }, [studies, colDefs, filter])
+  }, [studies, colDefs, filter, focusedStudy])
 
-  // Reset to page 0 whenever the filter or category changes.
-  useEffect(() => { setPage(0) }, [filter, category])
+  // Reset to page 0 whenever the filter, category, or scope changes.
+  useEffect(() => { setPage(0) }, [filter, category, focusedStudy])
 
   if (!studies?.length) return null
 
@@ -97,7 +106,7 @@ export default function StudyTable({ studies, category, columns, filter }) {
           ))}
         </tbody>
       </table>
-      {filtered.length === 0 && filter && (
+      {filtered.length === 0 && filter && !focusedStudy && (
         <div className="jtox-empty">No studies match &ldquo;{filter}&rdquo;.</div>
       )}
       {totalPages > 1 && (

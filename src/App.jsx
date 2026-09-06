@@ -7,6 +7,7 @@ const ENV = import.meta.env || {}
 //   ?substanceUri=<full AMBIT substance URL>
 //   ?substanceId=<uuid>&apiBase=<AMBIT base>
 //   ?showDiagrams=true&tab=TOX
+//   ?study=<document_uuid>               — open that study; its tab is found for you
 //   ?convertBase=<ramanchada-api base>   — enables the dose-response chart (POST
 //      {convertBase}/dataset/convert?format=effectarray). Without it the chart is hidden.
 //      Falls back to VITE_RCAPI_URL for convenience while testing.
@@ -22,6 +23,7 @@ export default function App() {
       proxyTo={ENV.VITE_AMBIT_PROXY_TO || undefined}
       showDiagrams={params.get('showDiagrams') === 'true'}
       initialTab={params.get('tab') || undefined}
+      documentUuid={params.get('study') || undefined}
       showHeader
     />
   )

@@ -122,6 +122,13 @@
 }
 .jtoxkit-root table.jtox-table tbody tr:nth-child(even) { background: rgba(0,0,0,0.018); }
 
+/* focusUuid scope banner — the tab is narrowed to the one study a link points at. */
+.jtoxkit-root .jtox-scope-note {
+  color: var(--c-text-muted);
+  font-size: 13px;
+  margin: 4px 0 10px;
+}
+
 /* Per-effect columns: each effect is its own table row (rowSpan on per-study columns),
    so this is just a marker on the cell — must NOT be display:flex or it breaks the table
    column layout. The div.jtox-multi wrapper styling only applies to the renderMulti

@@ -57,6 +57,20 @@ Peer dependencies are `react`, `react-dom`, and, only for the dose-response char
 instance; if the host does not provide it, the chart is simply not shown. `dompurify` is a
 runtime dependency bundled by the library for sanitizing legacy renderer HTML.
 
+## Opening one study
+
+A host search index returns studies, not only substances: in spectrasearch a hit is one
+protocol application, identified by its `document_uuid` (the AMBIT `study.uuid`). Without
+`documentUuid` such a hit can only open its parent substance, leaving the user to find the
+study again by hand among the substance's other studies — for a well-characterised material
+that is several hundred rows across a tab's categories. `documentUuid` is what makes a
+study-level search result resolve to the study itself.
+
+The tab holding it is resolved by the viewer (studysummary counts studies per topcategory
+but does not say which one holds a given study), so a host that knows only the study id
+does not also have to know its category. Pass `initialTab` alongside it when the category
+is known — it saves loading the other tabs.
+
 ## Props
 
 | Prop | Type | Notes |
@@ -69,6 +83,7 @@ runtime dependency bundled by the library for sanitizing legacy renderer HTML.
 | `showDiagrams` | bool | Show structure images in the composition table. |
 | `columnConfig` | object | Study column config; accepts the existing jToxKit `config_study` object. |
 | `initialTab` | string | Top category to open first, for example `TOX`. |
+| `documentUuid` | string | Open one study — its AMBIT `uuid`, the `document_uuid` of a protocol application. The tab holding it is found for you, and the view narrows to that study alone (its category group, its row), with a "Show all" link back to the whole tab. Pass `initialTab` as well when the category is already known; it saves loading the other tabs. |
 | `proxyFrom` | string | Optional URL prefix to rewrite in AMBIT-returned URLs. Mostly useful for standalone/dev proxying. |
 | `proxyTo` | string | Optional replacement prefix used with `proxyFrom`. |
 | `source` | object | Inject a custom data source adapter; defaults to AMBIT REST. |
@@ -83,6 +98,7 @@ Useful standalone URLs:
 - `http://localhost:5175/jtoxkit/?substanceUri=<AMBIT substance URL>`
 - `http://localhost:5175/jtoxkit/?substanceId=<uuid>&apiBase=<AMBIT base>&showDiagrams=true`
 - `http://localhost:5175/jtoxkit/?substanceId=<uuid>&tab=TOX`
+- `http://localhost:5175/jtoxkit/?substanceId=<uuid>&study=<document_uuid>`
 
 Standalone environment variables are documented in `.env.example`. Embedded hosts should
 pass equivalent values as component props instead of relying on this package's Vite env.

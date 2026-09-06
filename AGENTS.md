@@ -79,7 +79,18 @@ src/
 
 - Embedded hosts pass runtime configuration as props: `substanceUri`, `substanceId`,
   `apiBase`, `convertBase`, `token`, `showDiagrams`, `columnConfig`, `initialTab`,
-  `proxyFrom`, `proxyTo`, and `source`.
+  `documentUuid`, `proxyFrom`, `proxyTo`, and `source`.
+- `documentUuid` exists so a study-level search hit can open the study itself. A host index
+  (spectrasearch) returns studies as well as substances, identified by `document_uuid`;
+  without this prop such a hit could only open the parent substance, leaving the user to
+  re-find the study among hundreds of sibling rows.
+- `documentUuid` focuses one study (AMBIT `study.uuid` = `document_uuid`). studysummary
+  only counts studies per topcategory, so `StudyViewer` sweeps the tabs — each loading at
+  most once — until one contains it. `StudyTab` then narrows to the single category group
+  holding that study (`utils/focusScope.js`), offering "Show all N studies" as the way out,
+  and `StudyTable` narrows to the one row, bypassing the text filter. Scope at the tab
+  level, not inside `StudyTable` alone: a topcategory's other categories can run to
+  hundreds of studies, so scoping one group leaves the view looking unscoped.
 - Standalone URL parsing belongs in `src/App.jsx` only.
 - Standalone Vite environment variables belong in `src/App.jsx` and build-tool config only.
   Reusable library files must receive config through props/context, not `import.meta.env`,

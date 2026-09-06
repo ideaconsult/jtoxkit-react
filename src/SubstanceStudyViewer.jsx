@@ -11,7 +11,7 @@ import './styles/viewer.css'
 // Drives the AMBIT load sequence (StudyKit.querySubstance): substance → studysummary,
 // with composition fetched by CompositionView. Inputs arrive as props (no URL parsing);
 // the standalone App / an embedding host decides what to show.
-function ViewerBody({ substanceUri, substanceId, initialTab, showHeader }) {
+function ViewerBody({ substanceUri, substanceId, initialTab, documentUuid, showHeader }) {
   const { apiBase } = useViewerConfig()
   const { load: loadSubstance, data: substance, loading, error } = useSubstance()
   const { load: loadSummary, data: summary } = useStudySummary()
@@ -47,7 +47,14 @@ function ViewerBody({ substanceUri, substanceId, initialTab, showHeader }) {
           compositionUri={substanceURI ? substanceURI + '/composition' : null}
         />
       </ErrorBoundary>
-      {summary?.length ? <StudyViewer summary={summary} initialTab={initialTab} substance={substance} /> : null}
+      {summary?.length ? (
+        <StudyViewer
+          summary={summary}
+          initialTab={initialTab}
+          documentUuid={documentUuid}
+          substance={substance}
+        />
+      ) : null}
     </div>
   )
 }
@@ -55,6 +62,11 @@ function ViewerBody({ substanceUri, substanceId, initialTab, showHeader }) {
 // Public component. Auth: `token` (when provided) is owned by the host; omitted ⇒
 // passive URL/sessionStorage/postMessage auth is used. Config props override package
 // defaults. `source` injects a custom data source (defaults to the AMBIT REST adapter).
+//
+// Body props: `substanceUri` / `substanceId` say what to load; `initialTab` opens a
+// topcategory; `documentUuid` (= one AMBIT study's uuid, the protocol application) opens
+// the study itself — the tab holding it is resolved by StudyViewer, so a host that only
+// knows the study id does not have to know its topcategory as well.
 export default function SubstanceStudyViewer({
   token, apiBase, convertBase, showDiagrams, columnConfig, proxyFrom, proxyTo, source, ...body
 }) {

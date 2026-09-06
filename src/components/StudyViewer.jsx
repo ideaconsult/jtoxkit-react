@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useStudies } from '../hooks/useAmbit.js'
 import { useViewerConfig } from '../context/ViewerConfig.jsx'
 import { config_study } from '../config/studyColumns.js'
+import { groupWithStudy, countStudies } from '../utils/focusScope.js'
 import CategorySection from './CategorySection.jsx'
 
 const KNOWN = { 'P-CHEM': 'P-Chem', ENV_FATE: 'Env Fate', ECOTOX: 'Eco Tox', TOX: 'Tox' }
@@ -48,7 +49,7 @@ function FoldableCategory({ title, collapsed, onToggle, children }) {
   )
 }
 
-function StudyTab({ tab, cached, onLoaded, substance }) {
+function StudyTab({ tab, cached, onLoaded, substance, focusUuid }) {
   const cfg = useViewerConfig()
   const columns = (cfg.columnConfig || config_study).columns
   const { load, data, loading, error } = useStudies()
@@ -56,6 +57,10 @@ function StudyTab({ tab, cached, onLoaded, substance }) {
 
   const [filter, setFilter] = useState('')
   const [collapsed, setCollapsed] = useState(() => new Set())
+  // Escape hatch out of a focusUuid scope; a new link re-scopes rather than keeping a
+  // stale "show all" from the previous one.
+  const [showAll, setShowAll] = useState(false)
+  useEffect(() => { setShowAll(false) }, [focusUuid])
 
   useEffect(() => {
     if (!cached) load(tab.uri)
@@ -65,7 +70,12 @@ function StudyTab({ tab, cached, onLoaded, substance }) {
     if (!cached && data) onLoaded(tab.key, data)
   }, [data, cached, tab.key, onLoaded])
 
-  const groups = useMemo(() => groupByCategory(studies), [studies])
+  const allGroups = useMemo(() => groupByCategory(studies), [studies])
+  // A deep link narrows the tab to the category holding that study -- the other categories
+  // of the same topcategory are unrelated to it and can run to hundreds of rows.
+  const focusGroup = useMemo(() => groupWithStudy(allGroups, focusUuid), [allGroups, focusUuid])
+  const scoped = !!focusGroup && !showAll
+  const groups = scoped ? [focusGroup] : allGroups
 
   if (loading && !studies) return <div className="jtox-loading">Loading studies…</div>
   if (error) return <div className="jtox-error">Error loading studies: {error}</div>
@@ -94,6 +104,14 @@ function StudyTab({ tab, cached, onLoaded, substance }) {
           {allCollapsed ? 'Expand all' : 'Collapse all'}
         </button>
       </div>
+      {scoped && (
+        <div className="jtox-scope-note">
+          Showing the one study this link points at.{' '}
+          <button type="button" className="jtox-link-btn" onClick={() => setShowAll(true)}>
+            Show all {countStudies(allGroups)} studies in {tab.label}
+          </button>
+        </div>
+      )}
       {groups.map((g) => (
         <FoldableCategory
           key={g.code}
@@ -101,17 +119,26 @@ function StudyTab({ tab, cached, onLoaded, substance }) {
           collapsed={collapsed.has(g.code)}
           onToggle={() => toggleOne(g.code)}
         >
-          <CategorySection group={g} columns={columns} filter={filter} substance={substance} />
+          <CategorySection
+            group={g}
+            columns={columns}
+            filter={filter}
+            substance={substance}
+            focusUuid={scoped ? focusUuid : undefined}
+          />
         </FoldableCategory>
       ))}
     </div>
   )
 }
 
-export default function StudyViewer({ summary, initialTab, substance }) {
+export default function StudyViewer({ summary, initialTab, documentUuid, substance }) {
   const tabs = useMemo(() => buildTabs(summary), [summary])
   const [active, setActive] = useState(0)
   const [cache, setCache] = useState({})
+  // Auto tab-selection for `documentUuid` is done once: after a match, after every tab has
+  // been looked at, or as soon as the user picks a tab themselves.
+  const [settled, setSettled] = useState(false)
 
   useEffect(() => {
     if (!initialTab) {
@@ -122,6 +149,27 @@ export default function StudyViewer({ summary, initialTab, substance }) {
     const idx = tabs.findIndex((t) => t.key.replace(/ /g, '_').toUpperCase() === want)
     setActive(idx >= 0 ? idx : 0)
   }, [tabs, initialTab])
+
+  // Open the tab holding `documentUuid` (an AMBIT study uuid = one protocol application).
+  // studysummary only counts studies per topcategory, so which tab holds a given study is
+  // not known until that tab's studies are fetched. Sweep instead: let the visible tab load
+  // (StudyTab caches it through onLoaded), and if it has no match, move to the next tab that
+  // hasn't been loaded yet. Each tab is still fetched at most once, and a host that does
+  // know the topcategory can pass `initialTab` to make the first look the right one.
+  useEffect(() => {
+    if (!documentUuid || settled || !tabs.length) return
+    const found = tabs.findIndex((t) => (cache[t.key] || []).some((s) => s.uuid === documentUuid))
+    if (found >= 0) {
+      setActive(found)
+      setSettled(true)
+      return
+    }
+    const current = tabs[Math.min(active, tabs.length - 1)]
+    if (!cache[current.key]) return // still loading — wait for onLoaded
+    const next = tabs.findIndex((t) => !cache[t.key])
+    if (next >= 0) setActive(next)
+    else setSettled(true) // every tab loaded, no such study here
+  }, [documentUuid, settled, tabs, cache, active])
 
   const onLoaded = useMemo(
     () => (key, studies) => setCache((c) => (c[key] ? c : { ...c, [key]: studies })),
@@ -142,13 +190,23 @@ export default function StudyViewer({ summary, initialTab, substance }) {
             role="tab"
             aria-selected={i === active}
             className={'jtox-tab' + (i === active ? ' active' : '')}
-            onClick={() => setActive(i)}
+            onClick={() => {
+              setActive(i)
+              setSettled(true) // a manual pick ends any documentUuid sweep
+            }}
           >
             {t.label} <span className="jtox-count">{t.total}</span>
           </button>
         ))}
       </div>
-      <StudyTab key={tab.key} tab={tab} cached={cache[tab.key]} onLoaded={onLoaded} substance={substance} />
+      <StudyTab
+        key={tab.key}
+        tab={tab}
+        cached={cache[tab.key]}
+        onLoaded={onLoaded}
+        substance={substance}
+        focusUuid={documentUuid}
+      />
     </div>
   )
 }
