@@ -232,10 +232,12 @@ pnpm build:lib
 pnpm pack --pack-destination /tmp/viewer-packs
 ```
 
-Then, in a host app and preferably on a throwaway branch:
+The generated archive includes the package version in its filename. Use the exact path
+reported by `pnpm pack`, replacing `X.Y.Z` below with that version. Then, in a host app
+and preferably on a throwaway branch:
 
 ```sh
-pnpm add /tmp/viewer-packs/ideaconsult-jtoxkit-react-0.1.0.tgz
+pnpm add /tmp/viewer-packs/ideaconsult-jtoxkit-react-X.Y.Z.tgz
 pnpm dev -- --force
 ```
 

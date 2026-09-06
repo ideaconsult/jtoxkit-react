@@ -1,6 +1,6 @@
 {
   "name": "@ideaconsult/jtoxkit-react",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "packageManager": "pnpm@11.10.0",
   "description": "Embeddable React viewer for eNanoMapper/AMBIT substance, composition and study data. React rewrite of the jToxKit Study/Substance kits.",
   "license": "Apache-2.0",
